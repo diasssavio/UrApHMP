@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/FWChrono.cpp \
 ../src/UrApHMP.cpp \
 ../src/grasp.cpp \
 ../src/ils.cpp \
@@ -11,6 +12,7 @@ CPP_SRCS += \
 ../src/solution.cpp 
 
 OBJS += \
+./src/FWChrono.o \
 ./src/UrApHMP.o \
 ./src/grasp.o \
 ./src/ils.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./src/solution.o 
 
 CPP_DEPS += \
+./src/FWChrono.d \
 ./src/UrApHMP.d \
 ./src/grasp.d \
 ./src/ils.d \

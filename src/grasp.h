@@ -55,10 +55,13 @@ public:
 
 	// Useful Methods
 	solution greedy_randomized_construction();
-	solution local_search( solution& ); // TODO Implement the local search testing new neighborhoods
+	solution local_search_n1( solution& ); // TODO Implement the local search testing new neighborhoods
+	solution local_search_n1_min( solution& );
+	solution local_search_n2( solution& );
 
 	vector<solution> neighborhood1( solution& );
-	vector<solution> neighborhood2( solution& ); // TODO two-point exchange
+	vector<solution> neighborhood1_min( solution& );
+	vector<solution> neighborhood2( solution& );
 	// TODO Create a exchange route neighborhood Na
 
 	solution& execute();

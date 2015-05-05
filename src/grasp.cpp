@@ -105,22 +105,42 @@ solution grasp::greedy_randomized_construction(){
 	return sol;
 }
 
-solution grasp::local_search(solution& p_sol){
+solution grasp::local_search_n1(solution& p_sol){
+	// TODO Implement a VND local search with a 4 neighborhoods structure
+
+	// Evaluating the neighbors
+	vector< solution > neighbors = neighborhood1(p_sol);
+	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+
+	// Checking the best elements in the Neighborhood 1
+	if(improved.get_total_cost() < p_sol.get_total_cost())
+		return improved;
+	return p_sol;
+}
+
+solution grasp::local_search_n1_min(solution& p_sol){
+	// TODO Implement a VND local search with a 4 neighborhoods structure
+
+	// Evaluating the neighbors
+	vector< solution > neighbors = neighborhood1_min(p_sol);
+	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+
+	// Checking the best elements in the Neighborhood 1
+	if(improved.get_total_cost() < p_sol.get_total_cost())
+		return improved;
+	return p_sol;
+}
+
+solution grasp::local_search_n2(solution& p_sol){
 	// TODO Implement a VND local search with a 4 neighborhoods structure
 
 	// Evaluating the neighbors
 	vector< solution > neighbors = neighborhood2(p_sol);
 	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
 
-	// Checking the best elements in the Neighborhood 1 & 2
+	// Checking the best elements in the Neighborhood 1
 	if(improved.get_total_cost() < p_sol.get_total_cost())
 		return improved;
-	/*else{
-		neighbors = neighborhood2(p_sol);
-		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
-		if(improved.get_total_cost() < p_sol.get_total_cost())
-			return improved;
-	}*/
 	return p_sol;
 }
 
@@ -152,6 +172,32 @@ vector<solution> grasp::neighborhood1( solution& p_sol ){
 		printf("\nneighbor #%d: %.2lf\n", i, neighbors[i].get_total_cost());
 	}*/
 	return neighbors;
+}
+
+vector<solution> grasp::neighborhood1_min( solution& p_sol ){
+		/**
+		 * Generate a Neighborhood based on a one-point exchange of the best evaluated
+		 * Hub in the p_sol (partial solution) given.
+		 */
+
+		vector< double > temp = p_sol.get_hubs_cost();
+		vector< double >::iterator temp_it = min_element(temp.begin(), temp.end());
+		int h = temp_it - temp.begin();
+
+		// Generating Neighborhood
+		vector< solution > neighbors;
+		for(int i = 0; i < instance.get_n(); i++){
+			if(p_sol.is_hub(i)) continue;
+			vector< int > hubs(p_sol.get_alloc_hubs());
+			hubs[h] = i;
+			solution s1(instance, p, r);
+			s1.set_alloc_hubs(hubs);
+			s1.assign_hubs();
+			s1.route_traffics();
+			neighbors.push_back(s1);
+		}
+
+		return neighbors;
 }
 
 vector<solution> grasp::neighborhood2( solution& p_sol ){
@@ -198,11 +244,11 @@ vector<solution> grasp::neighborhood2( solution& p_sol ){
 solution& grasp::execute(){
 	for(size_t i = 0; i < max_iterations; i++){
 		solution initial = greedy_randomized_construction();
-		printf("\niteration #%d:\n", i);
+//		printf("\niteration #%d:\n", i);
 //		printf("Initial Solution:\n");
 //		initial.show_data();
 
-		solution improved = local_search(initial);
+		solution improved = local_search_n1(initial);
 //		printf("Improved Solution:\n");
 //		improved.show_data();
 
@@ -211,7 +257,14 @@ solution& grasp::execute(){
 				set_best(improved);
 		}else best = improved;
 
-		printf("Best Solution:\n"); best.show_data();
+//		printf("Best Solution:\n"); best.show_data();
+		if(i == max_iterations - 1)
+		{
+			improved = local_search_n2(improved);
+			if(improved.get_total_cost() < best.get_total_cost())
+				set_best(improved);
+//			printf("Best Solution w/ n_2:\n"); best.show_data();
+		}
 	}
 	return best;
 }

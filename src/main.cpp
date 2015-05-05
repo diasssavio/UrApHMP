@@ -14,12 +14,18 @@
 #include "UrApHMP.h"
 #include "solution.h"
 #include "grasp.h"
+#include "FWChrono.h"
 
 using namespace std;
 
 
 
 int main() {
+	FWChrono timer;
+	timer.start();
+
+	srand(time(NULL));
+
 	int n;
 
 	scanf("%d", &n);
@@ -55,9 +61,11 @@ int main() {
 	int p = 4;
 	int r = 2;
 	double alpha_2 = 0.8;
-	srand(time(NULL));
 	grasp GRASP(instance, max_iterations, p, r, alpha_2);
-	GRASP.execute();
+	solution result = GRASP.execute();
+	timer.stop();
+	printf("Tempo de execução: %.2lf", timer.getStopTime());
+	result.show_data();
 //	GRASP.set_best();
 //	GRASP.get_best().show_data();
 //	GRASP.greedy_randomized_construction().show_data();
