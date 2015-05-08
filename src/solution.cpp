@@ -55,6 +55,10 @@ void solution::set_assigned_hubs( vector< vector< int > >& assigned_hubs ){
 	this->assigned_hubs = assigned_hubs;
 }
 
+void solution::set_assigned_hub( int i, int j, int assigned_hub ){
+	this->assigned_hubs[i][j] = assigned_hub;
+}
+
 void solution::set_f_chosen( vector< vector< int > >& f_chosen ){
 	this->f_chosen = f_chosen;
 }
@@ -65,6 +69,15 @@ void solution::set_s_chosen( vector< vector< int > >& s_chosen ){
 
 void solution::set_cost( vector< vector< double > >& cost ){
 	this->cost = cost;
+	double _cost = 0.0;
+	for(int i = 0; i < instance.get_n(); i++){
+		//if(is_hub(i)) continue;
+		for(int j = 0; j < instance.get_n(); j++){
+			//if(is_hub(j)) continue;
+			_cost += this->cost[i][j];
+		}
+	}
+	this->_cost = _cost;
 }
 
 void solution::set_hubs_cost( vector< double >& hubs ){
@@ -90,6 +103,9 @@ vector< int >& solution::get_alloc_hubs(){
 vector< vector<int > >& solution::get_assigned_hubs(){
 	return this->assigned_hubs;
 }
+vector< int >& solution::get_assigned_hubs( int i ){
+	return this->assigned_hubs[i];
+}
 vector< vector<int > >& solution::get_f_chosen(){
 	return this->f_chosen;
 }
@@ -105,17 +121,16 @@ vector< double >& solution::get_hubs_cost(){
 	return this->hubs_cost;
 }
 
-double solution::get_total_cost(){
+double solution::get_total_hubs_cost(){
 	double cost = 0.0;
-	for(int i = 0; i < instance.get_n(); i++){
-		//if(is_hub(i)) continue;
-		for(int j = 0; j < instance.get_n(); j++){
-			//if(is_hub(j)) continue;
-			cost += this->cost[i][j];
-		}
-	}
+	for(int i = 0; i < p; i++)
+		cost += this->hubs_cost[i];
 
 	return cost;
+}
+
+double solution::get_total_cost(){
+	return _cost;
 }
 
 void solution::generate_hubs_cost(){
@@ -217,13 +232,6 @@ void solution::assign_hubs(){
 	vector< vector< double > > distances = instance.get_distances();
 
 	for(int i = 0; i < instance.get_n(); i++){
-		// Adaptive part, if i is a hub we don't compute it
-		/*if(is_hub(i)){
-			// Assigning a empty vector
-			assigned.push_back(vector< int >());
-			continue;
-		}*/
-
 		// Calculating alloc(i,h), i.e., the assignment cost of i to every hub h
 		vector< pair< double, int> > alloc_value;
 		for(int h = 0; h < p; h++){
@@ -260,23 +268,9 @@ void solution::route_traffics(){
 	vector< vector< double > > cost;
 	vector< vector< int > > H1, H2;
 	for(int i = 0; i < instance.get_n(); i++){
-		/*if(is_hub(i)){
-			cost.push_back(vector< double >());
-			H1.push_back(vector< int >());
-			H2.push_back(vector< int >());
-			continue;
-		}*/
-
 		vector< double > temp_cost;
 		vector< int > temp_H1, temp_H2;
 		for(int j = 0; j < instance.get_n(); j++){
-			/*if(is_hub(j)){
-				temp_cost.push_back(numeric_limits<double>::max());
-				temp_H1.push_back(numeric_limits<int>::max());
-				temp_H2.push_back(numeric_limits<int>::max());
-				continue;
-			}*/
-
 			// Calculating all costs using all hubs
 			vector< vector< double > > c_ij;
 			for(int hi = 0; hi < r; hi++){
@@ -312,8 +306,17 @@ void solution::route_traffics(){
 		H1.push_back(temp_H1);
 		H2.push_back(temp_H2);
 	}
+
 	set_cost(cost);
 	set_f_chosen(H1);
 	set_s_chosen(H2);
 	generate_hubs_cost();
+}
+
+void solution::assign_partial_hubs( int i, int j, int new_hub ){
+	this->assigned_hubs[i][j] = new_hub;
+}
+
+void solution::route_partial_traffics( int new_hub ){
+
 }

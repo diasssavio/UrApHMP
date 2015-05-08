@@ -23,6 +23,7 @@ using namespace std;
 int main() {
 	FWChrono timer;
 	timer.start();
+//	double timer_1 = cpuTime();
 
 	srand(time(NULL));
 
@@ -57,18 +58,17 @@ int main() {
 	instance.set_distances(aux);
 	aux.clear();
 
-	int max_iterations = 10;
+	int max_iterations = 100;
 	int p = 4;
 	int r = 2;
 	double alpha_2 = 0.8;
 	grasp GRASP(instance, max_iterations, p, r, alpha_2);
 	solution result = GRASP.execute();
+//	double timer_2 = cpuTime();
 	timer.stop();
 	printf("Tempo de execução: %.2lf", timer.getStopTime());
+//	printf("Tempo de execução: %.2lf", (timer_2-timer_1));
 	result.show_data();
-//	GRASP.set_best();
-//	GRASP.get_best().show_data();
-//	GRASP.greedy_randomized_construction().show_data();
 
 	return 0;
 }

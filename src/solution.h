@@ -34,6 +34,7 @@ private:
 	// Solution cost
 	vector< vector< double > > cost; // Cost matrix to go from i to j using H(1)ij and H(2)ij. Size: nxn.
 	vector< double > hubs_cost; // Hubs cost in the objective function. Size: p.
+	double _cost;
 
 public:
 	// Constructors & Destructors
@@ -50,6 +51,7 @@ public:
 
 	void set_alloc_hubs( vector< int >& );
 	void set_assigned_hubs( vector< vector< int > >& );
+	void set_assigned_hub( int, int, int );
 	void set_f_chosen( vector< vector< int > >& );
 	void set_s_chosen( vector< vector< int > >& );
 
@@ -64,12 +66,14 @@ public:
 
 	vector< int >& get_alloc_hubs();
 	vector< vector< int > >& get_assigned_hubs();
+	vector< int >& get_assigned_hubs( int );
 	vector< vector< int > >& get_f_chosen();
 	vector< vector< int > >& get_s_chosen();
 
 	vector< vector< double > >& get_cost();
 	vector< double >& get_hubs_cost();
 	double get_total_cost(); // Objective function value
+	double get_total_hubs_cost();
 
 	// Useful Methods
 	static bool my_comparison( pair< double, int >, pair< double, int > );
@@ -78,7 +82,9 @@ public:
 	bool is_hub( int );
 
 	void assign_hubs();
+	void assign_partial_hubs( int, int, int );
 	void route_traffics();
+	void route_partial_traffics( int );
 	void generate_hubs_cost(); // Generate the hubs costs in the solution
 };
 

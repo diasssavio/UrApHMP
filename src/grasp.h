@@ -24,7 +24,6 @@ private:
 	// GRASP Parameters
 	size_t max_iterations; // Max number of iterations
 	double alpha; // alpha [0,1]
-//	time_t seed; // Seed for random selection
 
 	// Input instance
 	uraphmp instance;
@@ -33,7 +32,9 @@ private:
 	int p; // Number of hubs to be allocated
 	int r; // Number of hubs to be assigned to each node
 	solution best;
-	vector< solution > neighbors;
+
+	// Preprocessed mesh of probable hubs
+	vector< int > mesh;
 
 	// Private methods
 	static bool my_comparison( pair< double, int >, pair< double, int > );
@@ -54,15 +55,20 @@ public:
 	solution& get_best();
 
 	// Useful Methods
-	solution greedy_randomized_construction();
-	solution local_search_n1( solution& ); // TODO Implement the local search testing new neighborhoods
-	solution local_search_n1_min( solution& );
-	solution local_search_n2( solution& );
-
-	vector<solution> neighborhood1( solution& );
-	vector<solution> neighborhood1_min( solution& );
-	vector<solution> neighborhood2( solution& );
 	// TODO Create a exchange route neighborhood Na
+	void preprocessing();
+	solution greedy_randomized_construction();
+	solution local_search_n1( solution& );
+	solution local_search_rn1( solution& );
+	solution local_search_n2( solution& );
+	solution local_search_rn2( solution& );
+	solution local_search_na( solution& );
+
+	vector< solution > neighborhood1( solution& );
+	vector< solution > r_neighborhood1( solution& );
+	vector< solution > neighborhood2( solution& );
+	vector< solution > r_neighborhood2( solution& );
+	vector< solution > neighborhood_a( solution& );
 
 	solution& execute();
 };
