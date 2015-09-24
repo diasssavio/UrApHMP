@@ -49,7 +49,7 @@ public:
 	void set_p( int );
 	void set_r( int );
 
-	void set_alloc_hubs( vector< int >& );
+	void set_alloc_hubs( const vector< int >& );
 	void set_assigned_hubs( vector< vector< int > >& );
 	void set_assigned_hub( int, int, int );
 	void set_f_chosen( vector< vector< int > >& );
@@ -64,7 +64,7 @@ public:
 	int get_p();
 	int get_r();
 
-	vector< int >& get_alloc_hubs();
+	const vector< int >& get_alloc_hubs() const;
 	vector< vector< int > >& get_assigned_hubs();
 	vector< int >& get_assigned_hubs( int );
 	vector< vector< int > >& get_f_chosen();
@@ -86,6 +86,7 @@ public:
 	void route_traffics();
 	void route_partial_traffics( int );
 	void generate_hubs_cost(); // Generate the hubs costs in the solution
+
 };
 
 #endif /* SOLUTION_H_ */

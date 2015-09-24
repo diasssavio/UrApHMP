@@ -39,8 +39,8 @@ public:
 
 	// Getters
 	int get_n();
-	vector< vector< double > >& get_traffics();
-	vector< vector< double > >& get_distances();
+	const vector< vector< double > >& get_traffics() const;
+	const vector< vector< double > >& get_distances() const;
 
 	double get_collection_rate();
 	double get_transfer_rate();

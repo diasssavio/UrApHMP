@@ -69,24 +69,25 @@ public:
 	solution greedy_randomized_construction();
 	solution local_search_n1( solution& );
 	solution local_search_rn1( solution& );
-	solution local_search_n2( solution& );
-	solution local_search_rn2( solution& );
+	solution local_search_cn1( solution& );
 	solution local_search_na( solution& );
+//	solution local_search_n2( solution& );
+//	solution local_search_rn2( solution& );
 
 	vector< solution > neighborhood1( solution& );
 	vector< solution > r_neighborhood1( solution& );
-	vector< solution > neighborhood2( solution& );
-	vector< solution > r_neighborhood2( solution& );
+	vector< solution > closest_n1( solution& );
 	vector< solution > neighborhood_a( solution& );
+//	vector< solution > neighborhood2( solution& );
+//	vector< solution > r_neighborhood2( solution& );
 
 	solution path_relinking( solution&, solution& );
 
 	// TODO 1.Implement a exchange neighborhood where it'll exchange adjacent values.
 	//		In order to implement this neighborhood the solution representation must change to a binary string.
+	//		It is also possible to do that just by increasing or decreasing some element from alloc_hubs
 	// TODO 5.Use a Hash Table to avoid calculus of same solutions on the neighbors **
 	// 		Check whether the same hubs were allocated in a solution so to avoid the calculation
-	// TODO 2.Correct dynamic allocation issue of vectors
-	// TODO 0. Allocate solution objects in the heap (using new operator) in order to return their references
 	solution& execute();
 };
 

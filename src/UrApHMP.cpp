@@ -36,11 +36,11 @@ int uraphmp::get_n(){
 	return this->n;
 }
 
-vector< vector< double > >& uraphmp::get_traffics(){
+const vector< vector< double > >& uraphmp::get_traffics() const{
 	return this->traffics;
 }
 
-vector< vector< double > >& uraphmp::get_distances(){
+const vector< vector< double > >& uraphmp::get_distances() const{
 	return this->distances;
 }
 

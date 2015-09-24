@@ -47,8 +47,10 @@ void solution::set_r( int r ){
 	this->r = r;
 }
 
-void solution::set_alloc_hubs( vector< int >& alloc_hubs ){
+void solution::set_alloc_hubs( const vector< int >& alloc_hubs ){
 	this->alloc_hubs = alloc_hubs;
+
+	// Sorting the hubs
 //	sort(this->alloc_hubs.begin(), this->alloc_hubs.end());
 }
 
@@ -97,7 +99,7 @@ int solution::get_r(){
 	return this->r;
 }
 
-vector< int >& solution::get_alloc_hubs(){
+const vector< int >& solution::get_alloc_hubs() const{
 	return this->alloc_hubs;
 }
 

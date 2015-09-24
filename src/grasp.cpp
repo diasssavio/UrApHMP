@@ -57,8 +57,8 @@ bool grasp::my_comparison( pair< double, int > p1, pair< double, int > p2 ){
 }
 
 solution grasp::greedy_randomized_construction(){
-	vector< vector< double > >& traffics = instance.get_traffics();
-	vector< vector< double > >& distances = instance.get_distances();
+	vector< vector< double > > traffics = instance.get_traffics();
+	vector< vector< double > > distances = instance.get_distances();
 
 	solution sol(instance, p, r);
 
@@ -144,26 +144,22 @@ solution grasp::local_search_rn1( solution& p_sol ){
 	return partial;
 }
 
-solution grasp::local_search_n2(solution& p_sol){
-	// Evaluating the neighbors
-	vector< solution > neighbors = neighborhood2(p_sol);
-	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+solution grasp::local_search_cn1( solution& p_sol ){
+	// TODO 2.Test the use w/ RN1
 
-	// Checking the best elements in the Neighborhood 1
-	if(improved.get_total_cost() < p_sol.get_total_cost())
-		return improved;
-	return p_sol;
-}
+	// Checking the best elements in the Adjacent points
+	solution partial = p_sol;
+	solution improved;
+	vector< solution > neighbors;
+	do{
+		neighbors = closest_n1(partial);
+		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+//		improved = neighbors[ neighbors.size() - 1 ];
+		if(improved.get_total_cost() < partial.get_total_cost())
+			partial = improved;
+	}while(improved.get_cost() == partial.get_cost());
 
-solution grasp::local_search_rn2(solution& p_sol){
-	// Evaluating the neighbors
-	vector< solution > neighbors = r_neighborhood2(p_sol);
-	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
-
-	// Checking the best elements in the Neighborhood 1
-	if(improved.get_total_cost() < p_sol.get_total_cost())
-		return improved;
-	return p_sol;
+	return partial;
 }
 
 solution grasp::local_search_na( solution& p_sol ){
@@ -181,6 +177,28 @@ solution grasp::local_search_na( solution& p_sol ){
 
 	return partial;
 }
+
+//solution grasp::local_search_n2(solution& p_sol){
+//	// Evaluating the neighbors
+//	vector< solution > neighbors = neighborhood2(p_sol);
+//	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+//
+//	// Checking the best elements in the Neighborhood 1
+//	if(improved.get_total_cost() < p_sol.get_total_cost())
+//		return improved;
+//	return p_sol;
+//}
+//
+//solution grasp::local_search_rn2(solution& p_sol){
+//	// Evaluating the neighbors
+//	vector< solution > neighbors = r_neighborhood2(p_sol);
+//	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+//
+//	// Checking the best elements in the Neighborhood 1
+//	if(improved.get_total_cost() < p_sol.get_total_cost())
+//		return improved;
+//	return p_sol;
+//}
 
 vector<solution> grasp::neighborhood1( solution& p_sol ){
 	/**
@@ -241,64 +259,38 @@ vector<solution> grasp::r_neighborhood1( solution& p_sol ){
 	return neighbors;
 }
 
-vector<solution> grasp::neighborhood2( solution& p_sol ){
+vector< solution > grasp::closest_n1( solution& p_sol ){
 	/**
-	 * Generate a Neighborhood based on a two-point exchange of the two-worst evaluated
-	 * Hubs in the p_sol (partial solution) given.
-	 */
-
-	// Finding the two expensive hubs in the solution
-	vector< double > temp(p_sol.get_hubs_cost());
-	vector< double >::iterator it1 = max_element(temp.begin(), temp.end());
-	int h1 = it1 - temp.begin();
-	temp.erase(it1);
-	it1 = max_element(temp.begin(), temp.end());
-	int h2 = it1 - temp.begin();
-
-	// Generating the neighborhood
-	vector<solution> neighbors;
-	for(unsigned i = 0; i < mesh.size(); i++){
-		if(p_sol.is_hub(mesh[i])) continue;
-		for(unsigned j = 0; j < mesh.size(); j++){
-			if(p_sol.is_hub(mesh[j])) continue;
-			vector< int > hubs(p_sol.get_alloc_hubs());
-			hubs[h1] = mesh[i];
-			hubs[h2] = mesh[j];
-			solution s1(instance, p, r);
-			s1.set_alloc_hubs(hubs);
-			neighbors.push_back(s1);
-		}
-	}
-	for(unsigned i = 0; i < neighbors.size(); i++){
-		neighbors[i].assign_hubs();
-		neighbors[i].route_traffics();
-	}
-	/*for(int i = 0; i < neighbors.size(); i++){
-//		if(p_sol.is_hub(i)) continue;
-		neighbors[i].show_data();
-//		printf("\nneighbor #%d: %.2lf\n", i, neighbors[i].get_total_cost());
-	}*/
-
-	return neighbors;
-}
-
-vector<solution> grasp::r_neighborhood2( solution& p_sol ){
-	/**
-	 * Generate a Neighborhood based on a two-point exchange of two random Hubs
+	 * Generate a Neighborhood based on a one-point exchange of the two closest points of Hubs
 	 * in p_sol (partial solution) given.
 	 */
+	// TODO 1.1.Check whether the points are closest taking their indexes
+	// TODO 1.2.Analyze only the mesh points
 
 	// Generating Neighborhood
-	vector< solution > neighbors;
-	for(int h = 0; h < p; h++){
-		vector< int > hubs(p_sol.get_alloc_hubs());
-		hubs[h] = rand() % mesh.size();
+	vector< solution > neighbors; // Analyzing the 2 closest indexes points for each hub
+	vector< int > alloc_hubs = p_sol.get_alloc_hubs();
+	for(int i = 0; i < p; i++){
+		if(alloc_hubs[i] - 1 > 0 && !p_sol.is_hub(alloc_hubs[i] - 1)){
+			vector< int > hubs(alloc_hubs);
+			hubs[i] = alloc_hubs[i] - 1;
 
-		solution s1(instance, p, r);
-		s1.set_alloc_hubs(hubs);
-		s1.assign_hubs();
-		s1.route_traffics();
-		neighbors.push_back(s1);
+			solution s1(instance, p, r);
+			s1.set_alloc_hubs(hubs);
+			s1.assign_hubs();
+			s1.route_traffics();
+			neighbors.push_back(s1);
+		}
+		if((alloc_hubs[i] + 1) < (instance.get_n() - 1) && !p_sol.is_hub(alloc_hubs[i] + 1)){
+			vector< int > hubs(alloc_hubs);
+			hubs[i] = alloc_hubs[i] + 1;
+
+			solution s1(instance, p, r);
+			s1.set_alloc_hubs(hubs);
+			s1.assign_hubs();
+			s1.route_traffics();
+			neighbors.push_back(s1);
+		}
 	}
 
 	return neighbors;
@@ -330,6 +322,69 @@ vector< solution > grasp::neighborhood_a( solution& p_sol ){
 
 	return neighbors;
 }
+
+//vector<solution> grasp::neighborhood2( solution& p_sol ){
+//	/**
+//	 * Generate a Neighborhood based on a two-point exchange of the two-worst evaluated
+//	 * Hubs in the p_sol (partial solution) given.
+//	 */
+//
+//	// Finding the two expensive hubs in the solution
+//	vector< double > temp(p_sol.get_hubs_cost());
+//	vector< double >::iterator it1 = max_element(temp.begin(), temp.end());
+//	int h1 = it1 - temp.begin();
+//	temp.erase(it1);
+//	it1 = max_element(temp.begin(), temp.end());
+//	int h2 = it1 - temp.begin();
+//
+//	// Generating the neighborhood
+//	vector<solution> neighbors;
+//	for(unsigned i = 0; i < mesh.size(); i++){
+//		if(p_sol.is_hub(mesh[i])) continue;
+//		for(unsigned j = 0; j < mesh.size(); j++){
+//			if(p_sol.is_hub(mesh[j])) continue;
+//			vector< int > hubs(p_sol.get_alloc_hubs());
+//			hubs[h1] = mesh[i];
+//			hubs[h2] = mesh[j];
+//			solution s1(instance, p, r);
+//			s1.set_alloc_hubs(hubs);
+//			neighbors.push_back(s1);
+//		}
+//	}
+//	for(unsigned i = 0; i < neighbors.size(); i++){
+//		neighbors[i].assign_hubs();
+//		neighbors[i].route_traffics();
+//	}
+//	/*for(int i = 0; i < neighbors.size(); i++){
+////		if(p_sol.is_hub(i)) continue;
+//		neighbors[i].show_data();
+////		printf("\nneighbor #%d: %.2lf\n", i, neighbors[i].get_total_cost());
+//	}*/
+//
+//	return neighbors;
+//}
+//
+//vector<solution> grasp::r_neighborhood2( solution& p_sol ){
+//	/**
+//	 * Generate a Neighborhood based on a two-point exchange of two random Hubs
+//	 * in p_sol (partial solution) given.
+//	 */
+//
+//	// Generating Neighborhood
+//	vector< solution > neighbors;
+//	for(int h = 0; h < p; h++){
+//		vector< int > hubs(p_sol.get_alloc_hubs());
+//		hubs[h] = rand() % mesh.size();
+//
+//		solution s1(instance, p, r);
+//		s1.set_alloc_hubs(hubs);
+//		s1.assign_hubs();
+//		s1.route_traffics();
+//		neighbors.push_back(s1);
+//	}
+//
+//	return neighbors;
+//}
 
 void grasp::preprocessing(){
 	vector< vector< double > > traffics = instance.get_traffics();
@@ -373,7 +428,7 @@ void grasp::preprocessing(){
 
 solution grasp::path_relinking(solution& origin, solution& destination){
 	vector<int> hubs_dif;
-	vector<int>& hubs_o = origin.get_alloc_hubs();
+	vector<int> hubs_o = origin.get_alloc_hubs();
 	for(int i = 0; i < p; i++){
 		if( destination.is_hub(hubs_o[i]) ) continue;
 		hubs_dif.push_back(hubs_o[i]);
@@ -413,6 +468,7 @@ solution& grasp::execute(){
 	bool first = true;
 	while(i < max_iterations){
 		solution initial = greedy_randomized_construction();
+//		solution improved = local_search_cn1(initial);
 		solution improved = local_search_rn1(initial);
 
 		// Acceptance criterion
