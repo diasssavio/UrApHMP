@@ -38,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: UrApHMP
+all: GRASP-UrApHMP
 
 # Tool invocations
-UrApHMP: $(OBJS) $(USER_OBJS)
+GRASP-UrApHMP: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++  -o "UrApHMP" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++  -o "GRASP-UrApHMP" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) UrApHMP
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) GRASP-UrApHMP
 	-@echo ' '
 
 .PHONY: all clean dependents

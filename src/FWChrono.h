@@ -29,17 +29,17 @@ public:
 		return stopTime;
 	}
 
+	// Actual time in milliseconds
+	int getMilliCount();
+
+	// Get millispan
+	double getMilliSpan();
+
 private:
 	// Initial time
 	double startTime;
 	// End time
 	double stopTime;
-
-	///// GETTER
-	// Get millispan
-	double getMilliSpan();
-	// Actual time in milliseconds
-	int getMilliCount();
 };
 
 #endif /* FWOPT_MODULE_MEASUREMENT_FWCHRONO_H_ */

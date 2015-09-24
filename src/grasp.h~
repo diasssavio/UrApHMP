@@ -86,7 +86,6 @@ public:
 	// TODO 5.Use a Hash Table to avoid calculus of same solutions on the neighbors **
 	// 		Check whether the same hubs were allocated in a solution so to avoid the calculation
 	// TODO 2.Correct dynamic allocation issue of vectors
-	// TODO 0. Allocate solution objects in the heap (using new operator) in order to return their references
 	solution& execute();
 };
 

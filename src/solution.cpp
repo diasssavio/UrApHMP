@@ -49,6 +49,7 @@ void solution::set_r( int r ){
 
 void solution::set_alloc_hubs( vector< int >& alloc_hubs ){
 	this->alloc_hubs = alloc_hubs;
+//	sort(this->alloc_hubs.begin(), this->alloc_hubs.end());
 }
 
 void solution::set_assigned_hubs( vector< vector< int > >& assigned_hubs ){
@@ -167,7 +168,7 @@ void solution::show_data(){
 	printf("\np: %d\tr: %d\n", this->p, this->r);
 	printf("Allocated Hubs: ");
 	for(int i = 0; i < p; i++)
-		printf("%d\t", alloc_hubs[i]);
+		printf("%d\t", (alloc_hubs[i] + 1));
 
 	/*printf("\n\nAssigned Hubs:\n");
 	for(int i = 0; i < instance.get_n(); i++){
