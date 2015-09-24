@@ -58,8 +58,8 @@ int main() {
 	instance.set_distances(aux);
 	aux.clear();
 
-//	int max_iterations = 0.1 * n;
-	int max_iterations = n;
+	int max_iterations = 0.2 * n;
+//	int max_iterations = n;
 	int p = 5;
 	int r = 3;
 	double alpha_2 = 0.2;
