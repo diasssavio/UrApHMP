@@ -1,5 +1,6 @@
-src/solution.d: ../src/solution.cpp ../src/solution.h ../src/UrApHMP.h
+src/solution.d: ../src/solution.cpp ../src/../include/solution.h \
+ ../src/../include/../include/UrApHMP.h
 
-../src/solution.h:
+../src/../include/solution.h:
 
-../src/UrApHMP.h:
+../src/../include/../include/UrApHMP.h:

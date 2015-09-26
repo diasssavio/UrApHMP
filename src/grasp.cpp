@@ -5,7 +5,7 @@
  *      Author: Sávio S. Dias
  */
 
-#include "grasp.h"
+#include "../include/grasp.h"
 
 grasp::grasp( uraphmp& instance, size_t max_iterations, int p, int r, double alpha, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r), alpha(alpha) {
 	this->set_instance(instance);
@@ -136,7 +136,7 @@ solution grasp::local_search_rn1( solution& p_sol ){
 	do{
 		neighbors = r_neighborhood1(partial);
 		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
-		//		improved = neighbors[ neighbors.size() - 1 ];
+//		improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
 	}while(improved.get_cost() == partial.get_cost());
@@ -145,7 +145,7 @@ solution grasp::local_search_rn1( solution& p_sol ){
 }
 
 solution grasp::local_search_c2n1( solution& p_sol ){
-	// TODO 2.Test the use w/ RN1
+	// TODO 1.2.Test the use w/ RN1
 
 	// Checking the best elements in the Adjacent points
 	solution partial = p_sol;
@@ -163,19 +163,24 @@ solution grasp::local_search_c2n1( solution& p_sol ){
 }
 
 solution grasp::local_search_na( solution& p_sol ){
-	// Checking the best elements in the Neighborhood 1
+	// Checking the first best solution in the Neighborhood A
+	// TODO 2.1.Test for the best solution in the whole neighborhood
+	// 		It is interesting to note that a whole generation of this neighborhood is illogical due to the nature of it
+
 	solution partial = p_sol;
 	solution improved;
-	vector< solution > neighbors;
-	do{
-		neighbors = neighborhood_a(partial);
-		//		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
-		improved = neighbors[ neighbors.size() - 1 ];
-		if(improved.get_total_cost() < partial.get_total_cost())
+	bool is_improved = true;
+	while(is_improved){
+		vector< solution > neighbors = neighborhood_a(partial);
+		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+//		improved = neighbors[ neighbors.size() - 1 ];
+		if(improved.get_total_cost() < partial.get_total_cost()){
 			partial = improved;
-	}while(improved.get_cost() == partial.get_cost());
+			is_improved = true;
+		} else is_improved = false;
+	}
 
-	return partial;
+	return improved;
 }
 
 //solution grasp::local_search_n2(solution& p_sol){
@@ -188,7 +193,7 @@ solution grasp::local_search_na( solution& p_sol ){
 //		return improved;
 //	return p_sol;
 //}
-//
+
 //solution grasp::local_search_rn2(solution& p_sol){
 //	// Evaluating the neighbors
 //	vector< solution > neighbors = r_neighborhood2(p_sol);
@@ -264,7 +269,7 @@ vector< solution > grasp::closest2_n1( solution& p_sol ){
 	 * Generate a Neighborhood based on a one-point exchange of the two closest points of Hubs
 	 * in p_sol (partial solution) given.
 	 */
-	// TODO 1.Check the generation of previously calculated solutions as neighbors
+	// TODO 1.1.Check the generation of previously calculated solutions as neighbors
 	//		There's many intersection of neighbors
 
 	vector< vector< double > > distances = instance.get_distances();
@@ -342,27 +347,35 @@ vector< solution > grasp::closest2_n1( solution& p_sol ){
 
 vector< solution > grasp::neighborhood_a( solution& p_sol ){
 	// Generating Neighborhood
-	// TODO 3.Implement a full N-A, where all exchanges in positions are made, not only at random way
-	// TODO 4.Implement the partial evaluation of the solution for this neighborhood
+	// TODO 3.Implement the partial evaluation of the solution for this neighborhood
+	//		The issue here is that the solution quality will drop
+
 	vector< solution > neighbors;
 	vector< int > hubs(p_sol.get_alloc_hubs());
 	for(int i = 0; i < instance.get_n(); i++){
 		vector< int > assigned_hubs(p_sol.get_assigned_hubs(i));
+
+		// Finding the symmetric difference
 		vector< int > to_assign;
 		for(unsigned j = 0; j < hubs.size(); j++)
 			if(find(assigned_hubs.begin(), assigned_hubs.end(), hubs[j]) == assigned_hubs.end())
 				to_assign.push_back(hubs[j]);
-		int x = rand() % to_assign.size();
-		int h = rand() % r;
 
-		solution s1(instance, p, r);
-		s1.set_alloc_hubs(hubs);
-		s1.set_assigned_hubs(p_sol.get_assigned_hubs());
-		s1.set_assigned_hub(i, h, to_assign[x]);
-		s1.route_traffics();
-		neighbors.push_back(s1);
-		if(s1.get_cost() < p_sol.get_cost()) break;
+		// Generating the neighbors
+		for(int j = 0; j < this->r; j++)
+			for(unsigned k = 0; k < to_assign.size(); k++){
+				solution s1(instance, p, r);
+				s1.set_alloc_hubs(hubs);
+				s1.set_assigned_hubs(p_sol.get_assigned_hubs());
+				s1.set_assigned_hub(i, j, to_assign[k]);
+				s1.route_traffics();
+				neighbors.push_back(s1);
+//				if(s1.get_cost() < p_sol.get_cost())
+//					return neighbors;
+			}
 	}
+//	for(unsigned i = 0; i < neighbors.size(); i++)
+//		cout << neighbors[i].get_total_cost() << endl;
 
 	return neighbors;
 }
@@ -407,7 +420,7 @@ vector< solution > grasp::neighborhood_a( solution& p_sol ){
 //
 //	return neighbors;
 //}
-//
+
 //vector<solution> grasp::r_neighborhood2( solution& p_sol ){
 //	/**
 //	 * Generate a Neighborhood based on a two-point exchange of two random Hubs
@@ -512,8 +525,8 @@ solution& grasp::execute(){
 	bool first = true;
 	while(i < max_iterations){
 		solution initial = greedy_randomized_construction();
-		solution improved = local_search_c2n1(initial);
-//		solution improved = local_search_rn1(initial);
+//		solution improved = local_search_c2n1(initial);
+		solution improved = local_search_rn1(initial);
 
 		// Acceptance criterion
 		if(!first){
@@ -528,7 +541,14 @@ solution& grasp::execute(){
 					i = 1;
 					path.push_back(k);
 				}else i++;
-			}*/else i++;
+			}else i++;*/
+			else{ // Testing the LS_a only when LS_h doesn't improve the solution
+				improved = local_search_na(improved);
+				if(improved.get_total_cost() < best.get_total_cost()){
+					set_best(improved);
+					i = 1;
+				}else i++;
+			}
 		}else{
 			best = improved;
 			first = false;
@@ -536,6 +556,7 @@ solution& grasp::execute(){
 
 		it_log.push_back(make_pair(best.get_total_cost(), k++));
 		times.push_back(((double) timer.getMilliSpan() / 1000));
+//		printf("#%d:\t%.2lf\t%.2lf\n", k++, best.get_total_cost(), ((double) timer.getMilliSpan() / 1000));
 	}
 
 

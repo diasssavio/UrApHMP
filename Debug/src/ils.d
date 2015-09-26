@@ -1,3 +1,3 @@
-src/ils.d: ../src/ils.cpp ../src/ils.h
+src/ils.d: ../src/ils.cpp ../src/../include/ils.h
 
-../src/ils.h:
+../src/../include/ils.h:

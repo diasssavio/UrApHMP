@@ -5,7 +5,7 @@
  *      Author: savio
  */
 
-#include "solution.h"
+#include "../include/solution.h"
 
 bool solution::my_sol_comparison( solution s1, solution s2 ){
 	return (s1.get_total_cost() < s2.get_total_cost());

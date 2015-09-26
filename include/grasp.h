@@ -8,15 +8,15 @@
 #ifndef GRASP_H_
 #define GRASP_H_
 
-#include "UrApHMP.h"
-#include "solution.h"
-#include "FWChrono.h"
-
 #include <utility>
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
 #include <limits>
+#include <iostream>
+#include "../include/FWChrono.h"
+#include "../include/solution.h"
+#include "../include/UrApHMP.h"
 
 using namespace std;
 
@@ -83,7 +83,7 @@ public:
 
 	solution path_relinking( solution&, solution& );
 
-	// TODO 5.Use a Hash Table to avoid calculus of same solutions on the neighbors **
+	// TODO 4.Use a Hash Table to avoid calculus of same solutions on the neighbors **
 	// 		Check whether the same hubs were allocated in a solution so to avoid the calculation
 	solution& execute();
 };

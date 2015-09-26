@@ -11,10 +11,10 @@
 #include <cstdio>
 #include <ctime>
 
-#include "UrApHMP.h"
-#include "solution.h"
-#include "grasp.h"
-#include "FWChrono.h"
+#include "../include/FWChrono.h"
+#include "../include/grasp.h"
+#include "../include/solution.h"
+#include "../include/UrApHMP.h"
 
 using namespace std;
 

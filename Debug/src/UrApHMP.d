@@ -1,3 +1,3 @@
-src/UrApHMP.d: ../src/UrApHMP.cpp ../src/UrApHMP.h
+src/UrApHMP.d: ../src/UrApHMP.cpp ../src/../include/UrApHMP.h
 
-../src/UrApHMP.h:
+../src/../include/UrApHMP.h:
