@@ -8,10 +8,79 @@
 #ifndef ILS_H_
 #define ILS_H_
 
+#include <utility>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include <limits>
+#include <iostream>
+#include "../include/FWChrono.h"
+#include "../include/solution.h"
+#include "../include/UrApHMP.h"
+
 class ils {
+private:
+	// ILS Parameters
+	size_t max_iterations; // Max number of iterations
+
+	// Input instance
+	uraphmp instance;
+
+	// Current Solution
+	int p; // Number of hubs to be allocated
+	int r; // Number of hubs to be assigned to each node
+	solution best;
+
+	// Preprocessed mesh of probable hubs
+	vector< int > mesh;
+
+	// Current Neighbors
+	vector< solution > rn1;
+	vector< solution > na;
+	vector< solution > c2n1;
+
+	// Logs
+	vector< pair< double, int > > it_log;
+	vector< double > times;
+	FWChrono timer;
+
+	// Private methods
+	static bool my_comparison( pair< double, int >, pair< double, int > );
+	void set_c2n1( const vector<solution>& );
+	void set_na( const vector<solution>& );
+	void set_rn1( const vector<solution>& );
+
 public:
-	ils();
+	ils( uraphmp&, size_t, int, int, FWChrono& );
 	virtual ~ils();
+
+	// Getters
+	const solution& get_best() const;
+	size_t get_max_iterations() const;
+	const uraphmp& get_instance() const;
+	const vector< double >& get_times() const;
+	const vector< pair<double, int> >& get_it_log() const;
+
+	// Setters
+	void set_best( const solution& );
+	void set_instance( const uraphmp& );
+	void set_max_iterations( size_t );
+
+	// Useful Methods
+	void preprocessing();
+
+	solution constructor();
+
+	solution local_search_rn1( solution& );
+	solution local_search_c2n1( solution& );
+	solution local_search_na( solution& );
+
+	solution& r_neighborhood1( solution& );
+	solution& closest2_n1( solution& );
+	solution& neighborhood_a( solution& );
+
+	// Algorithm Execution
+	solution& execute();
 };
 
 #endif /* ILS_H_ */

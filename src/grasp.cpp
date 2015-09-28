@@ -12,45 +12,25 @@ grasp::grasp( uraphmp& instance, size_t max_iterations, int p, int r, double alp
 	this->timer = timer;
 }
 
-grasp::~grasp() {
+grasp::~grasp() { }
 
-}
+void grasp::set_max_iterations( size_t max_iterations ){ this->max_iterations = max_iterations; }
 
-void grasp::set_max_iterations( size_t max_iterations ){
-	this->max_iterations = max_iterations;
-}
+void grasp::set_instance( uraphmp& instance ){ this->instance = instance; }
 
-void grasp::set_instance( uraphmp& instance ){
-	this->instance = instance;
-}
+void grasp::set_best( const solution& sol ){ this->best = sol; }
 
-void grasp::set_best( const solution& sol ){
-	this->best = sol;
-}
+size_t grasp::get_max_iterations(){ return this->max_iterations; }
 
-size_t grasp::get_max_iterations(){
-	return this->max_iterations;
-}
+uraphmp& grasp::get_instance(){ return this->instance; }
 
-uraphmp& grasp::get_instance(){
-	return this->instance;
-}
+solution& grasp::get_best(){ return this->best; }
 
-solution& grasp::get_best(){
-	return this->best;
-}
+vector< pair< double, int > >& grasp::get_it_log(){ return this->it_log; }
 
-vector< pair< double, int > >& grasp::get_it_log(){
-	return this->it_log;
-}
+vector< double >& grasp::get_times(){ return this->times; }
 
-vector< double >& grasp::get_times(){
-	return this->times;
-}
-
-vector< int >& grasp::get_path(){
-	return this->path;
-}
+vector< int >& grasp::get_path(){ return this->path; }
 
 bool grasp::my_comparison( pair< double, int > p1, pair< double, int > p2 ){
 	return (p1.first < p2.first);
@@ -119,27 +99,32 @@ solution grasp::greedy_randomized_construction(){
 
 solution grasp::local_search_n1(solution& p_sol){
 	// Evaluating the neighbors
-	vector< solution > neighbors = neighborhood1(p_sol);
-	solution improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+	solution partial = p_sol;
+	solution improved;
+	bool is_improved = true;
+	while(is_improved){
+		solution improved = neighborhood1(partial);
+		// Checking the best elements in the Neighborhood 1
+		if(improved.get_total_cost() < p_sol.get_total_cost())
+			return improved;
+		else is_improved = false;
+	}
 
-	// Checking the best elements in the Neighborhood 1
-	if(improved.get_total_cost() < p_sol.get_total_cost())
-		return improved;
-	return p_sol;
+	return improved;
 }
 
 solution grasp::local_search_rn1( solution& p_sol ){
 	// Checking the best elements in the Neighborhood 1
 	solution partial = p_sol;
 	solution improved;
-	vector< solution > neighbors;
-	do{
-		neighbors = r_neighborhood1(partial);
-		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+	bool is_improved = true;
+	while(is_improved){
+		improved = r_neighborhood1(partial);
 //		improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
-	}while(improved.get_cost() == partial.get_cost());
+		else is_improved = false;
+	}
 
 	return partial;
 }
@@ -150,34 +135,30 @@ solution grasp::local_search_c2n1( solution& p_sol ){
 	// Checking the best elements in the Adjacent points
 	solution partial = p_sol;
 	solution improved;
-	vector< solution > neighbors;
-	do{
-		neighbors = closest2_n1(partial);
-		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+	bool is_improved = true;
+	while(is_improved){
+		improved = closest2_n1(partial);
 //		improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
-	}while(improved.get_cost() == partial.get_cost());
+		else is_improved = false;
+	}
 
 	return partial;
 }
 
 solution grasp::local_search_na( solution& p_sol ){
-	// Checking the first best solution in the Neighborhood A
-	// TODO 2.1.Test for the best solution in the whole neighborhood
-	// 		It is interesting to note that a whole generation of this neighborhood is illogical due to the nature of it
+	// Checking the best solution in the Neighborhood A
 
 	solution partial = p_sol;
 	solution improved;
 	bool is_improved = true;
 	while(is_improved){
-		vector< solution > neighbors = neighborhood_a(partial);
-		improved = *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
+		improved = neighborhood_a(partial);
 //		improved = neighbors[ neighbors.size() - 1 ];
-		if(improved.get_total_cost() < partial.get_total_cost()){
+		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
-			is_improved = true;
-		} else is_improved = false;
+		else is_improved = false;
 	}
 
 	return improved;
@@ -205,7 +186,7 @@ solution grasp::local_search_na( solution& p_sol ){
 //	return p_sol;
 //}
 
-vector<solution> grasp::neighborhood1( solution& p_sol ){
+solution grasp::neighborhood1( solution& p_sol ){
 	/**
 	 * Generate a Neighborhood based on a one-point exchange of the worst evaluated
 	 * Hub in the p_sol (partial solution) given.
@@ -225,21 +206,16 @@ vector<solution> grasp::neighborhood1( solution& p_sol ){
 		solution s1(instance, p, r);
 		s1.set_alloc_hubs(hubs);
 		s1.assign_hubs();
-		//		s1.set_assigned_hubs(p_sol.get_assigned_hubs());
-		//		s1.assign_partial_hubs(h, i); // Changing assigned_hubs in one position
+//		s1.set_assigned_hubs(p_sol.get_assigned_hubs());
+//		s1.assign_partial_hubs(h, i); // Changing assigned_hubs in one position
 		s1.route_traffics();
 		neighbors.push_back(s1);
 	}
-	/*printf("\nneighbor #\t Total cost:\t Hubs Cost:\t Razão\n");
-	for(int i = 0; i < neighbors.size(); i++){
-		if(p_sol.is_hub(i)) continue;
-		neighbors[i].show_data();
-		printf("\n#%d: %.2lf\n", i, neighbors[i].get_total_cost());
-	}*/
-	return neighbors;
+
+	return *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
 }
 
-vector<solution> grasp::r_neighborhood1( solution& p_sol ){
+solution grasp::r_neighborhood1( solution& p_sol ){
 	/**
 	 * Generate a Neighborhood based on a one-point exchange of a random Hub
 	 * in p_sol (partial solution) given.
@@ -258,13 +234,13 @@ vector<solution> grasp::r_neighborhood1( solution& p_sol ){
 		s1.assign_hubs();
 		s1.route_traffics();
 		neighbors.push_back(s1);
-		//		if(s1.get_cost() < p_sol.get_cost()) break;
+//		if(s1.get_cost() < p_sol.get_cost()) break;
 	}
 
-	return neighbors;
+	return *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
 }
 
-vector< solution > grasp::closest2_n1( solution& p_sol ){
+solution grasp::closest2_n1( solution& p_sol ){
 	/**
 	 * Generate a Neighborhood based on a one-point exchange of the two closest points of Hubs
 	 * in p_sol (partial solution) given.
@@ -319,33 +295,12 @@ vector< solution > grasp::closest2_n1( solution& p_sol ){
 
 		neighbors.push_back(s1);
 		neighbors.push_back(s2);
-
-//		if(alloc_hubs[i] - 1 > 0 && !p_sol.is_hub(alloc_hubs[i] - 1)){
-//			vector< int > hubs(alloc_hubs);
-//			hubs[i] = alloc_hubs[i] - 1;
-//
-//			solution s1(instance, p, r);
-//			s1.set_alloc_hubs(hubs);
-//			s1.assign_hubs();
-//			s1.route_traffics();
-//			neighbors.push_back(s1);
-//		}
-//		if((alloc_hubs[i] + 1) < (instance.get_n() - 1) && !p_sol.is_hub(alloc_hubs[i] + 1)){
-//			vector< int > hubs(alloc_hubs);
-//			hubs[i] = alloc_hubs[i] + 1;
-//
-//			solution s1(instance, p, r);
-//			s1.set_alloc_hubs(hubs);
-//			s1.assign_hubs();
-//			s1.route_traffics();
-//			neighbors.push_back(s1);
-//		}
 	}
 
-	return neighbors;
+	return *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
 }
 
-vector< solution > grasp::neighborhood_a( solution& p_sol ){
+solution grasp::neighborhood_a( solution& p_sol ){
 	// Generating Neighborhood
 	// TODO 3.Implement the partial evaluation of the solution for this neighborhood
 	//		The issue here is that the solution quality will drop
@@ -374,10 +329,8 @@ vector< solution > grasp::neighborhood_a( solution& p_sol ){
 //					return neighbors;
 			}
 	}
-//	for(unsigned i = 0; i < neighbors.size(); i++)
-//		cout << neighbors[i].get_total_cost() << endl;
 
-	return neighbors;
+	return *min_element(neighbors.begin(), neighbors.end(), solution::my_sol_comparison);
 }
 
 //vector<solution> grasp::neighborhood2( solution& p_sol ){

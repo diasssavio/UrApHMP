@@ -74,10 +74,10 @@ public:
 //	solution local_search_n2( solution& );
 //	solution local_search_rn2( solution& );
 
-	vector< solution > neighborhood1( solution& );
-	vector< solution > r_neighborhood1( solution& );
-	vector< solution > closest2_n1( solution& );
-	vector< solution > neighborhood_a( solution& );
+	solution neighborhood1( solution& );
+	solution r_neighborhood1( solution& );
+	solution closest2_n1( solution& );
+	solution neighborhood_a( solution& );
 //	vector< solution > neighborhood2( solution& );
 //	vector< solution > r_neighborhood2( solution& );
 

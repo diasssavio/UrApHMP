@@ -13,6 +13,7 @@
 
 #include "../include/FWChrono.h"
 #include "../include/grasp.h"
+#include "../include/ils.h"
 #include "../include/solution.h"
 #include "../include/UrApHMP.h"
 
@@ -20,10 +21,9 @@ using namespace std;
 
 
 
-int main() {
+int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
-//	double timer_1 = cpuTime();
 
 	srand(time(NULL));
 
@@ -32,7 +32,10 @@ int main() {
 	scanf("%d", &n);
 	double X = 1.0, alpha_1 = 0.2, delta = 1.0;
 	uraphmp instance(n, X, alpha_1, delta);
+	int p = 5;
+	int r = 3;
 
+	// Reading file information
 	vector< vector< double> > aux;
 	for(int i = 0; i < n; i++){
 		vector< double > aux2;
@@ -58,34 +61,35 @@ int main() {
 	instance.set_distances(aux);
 	aux.clear();
 
+
 	int max_iterations = 0.2 * n;
-//	int max_iterations = n;
-	int p = 5;
-	int r = 3;
-	double alpha_2 = 0.2;
-	grasp GRASP(instance, max_iterations, p, r, alpha_2, timer);
-	solution result = GRASP.execute();
-//	double timer_2 = cpuTime();
+
+//	double alpha_2 = 0.2;
+//	grasp GRASP(instance, max_iterations, p, r, alpha_2, timer);
+//	solution result = GRASP.execute();
+
+	ils ILS(instance, max_iterations, p, r, timer);
+	solution result = ILS.execute();
+
 	timer.stop();
-	printf("Tempo de execução: %.2lf", timer.getStopTime());
-//	printf("Tempo de execução: %.2lf", (timer_2-timer_1));
+	printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
 	result.show_data();
 
 	printf("\nIT_LOG:\n");
-	vector< pair< double, int> > it_log = GRASP.get_it_log();
-	vector< double > times = GRASP.get_times();
-	vector< int > path = GRASP.get_path();
+	vector< pair< double, int> > it_log = ILS.get_it_log();
+	vector< double > times = ILS.get_times();
 	double min_time = 0.0;
-	for(int i = 0; i < it_log.size(); i++){
+	for(unsigned i = 0; i < it_log.size(); i++){
 		printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
 
 		if(it_log[i].first == result.get_total_cost() && min_time == 0.0)
 			min_time = times[i];
 	}
 
-	printf("\nPATH RELINKING USAGE:\n");
-	for(int i = 0; i < path.size(); i++)
-		printf("%d\t", path[i]);
+//	vector< int > path = GRASP.get_path();
+//	printf("\nPATH RELINKING USAGE:\n");
+//	for(unsigned i = 0; i < path.size(); i++)
+//		printf("%d\t", path[i]);
 
 	printf("\nMIN_TIME: %.2lf\n", min_time);
 
