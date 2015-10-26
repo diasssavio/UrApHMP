@@ -7,9 +7,22 @@
 
 #include "../include/ils.h"
 
+ils::ils( uraphmp& instance, size_t max_iterations, size_t _max_r, double _alpha, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r), alpha(_alpha), max_r_iterations(_max_r) {
+	this->set_instance(instance);
+	this->mesh = vector< unsigned >(instance.get_n());
+	for(unsigned i = 0; i < mesh.size(); i++)
+		this->mesh[i] = i;
+	this->timer = timer;
+}
+
 ils::ils( uraphmp& instance, size_t max_iterations, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r) {
 	this->set_instance(instance);
+	this->mesh = vector< unsigned >(instance.get_n());
+	for(unsigned i = 0; i < mesh.size(); i++)
+		this->mesh[i] = i;
 	this->timer = timer;
+	this->alpha = 0.0;
+	this->max_r_iterations = 0;
 }
 
 ils::~ils() { }
@@ -26,7 +39,7 @@ const uraphmp& ils::get_instance() const { return instance; }
 
 size_t ils::get_max_iterations() const { return max_iterations; }
 
-const vector<pair<double, int> >& ils::get_it_log() const { return it_log; }
+const vector<pair<double, unsigned> >& ils::get_it_log() const { return it_log; }
 
 const vector<double>& ils::get_times() const { return times; }
 
@@ -45,7 +58,7 @@ void ils::preprocessing(){
 	vector< vector< double > > distances = instance.get_distances();
 	int n = instance.get_n();
 
-	vector< pair< double, int > > aux;
+	vector< pair< double, unsigned > > aux;
 	for(int h = 0; h < n; h++){
 		// Creating the e(j,h)
 		vector< double > e;
@@ -71,7 +84,7 @@ void ils::preprocessing(){
 	}
 
 	// Eliminating the x percent most expensive
-	vector< int > mesh;
+	vector< unsigned > mesh;
 	int x = (0.1 * n);
 	sort(aux.begin(), aux.end(), my_comparison);
 	for(unsigned i = 0; i < aux.size() - x; i++)
@@ -87,19 +100,19 @@ solution ils::constructor(){
 	solution sol(instance, p, r);
 
 	// Step 1 - Locating the hubs - alloc_hubs
-	vector< int > hubs;
+	set< unsigned > hubs;
 	for(int p = 0; p < sol.get_p(); p++){
 		// Calculating the g(h) for each node unselected as hub - The Candidate List
-		vector< pair< double, int > > g;
+		vector< pair< double, unsigned > > g;
 		for(unsigned h = 0; h < mesh.size(); h++){
 			// Adaptive part of the procedure
-			if(find(hubs.begin(), hubs.end(), mesh[h]) != hubs.end()) continue;
+			if(hubs.find(mesh[h]) != hubs.end()) continue;
 
 			// Creating the e(j,h)
 			vector< double > e;
 			for(int j = 0; j < instance.get_n(); j++){
 				// Adaptive part of the procedure
-				if(find(hubs.begin(), hubs.end(), j) != hubs.end()) continue;
+				if(hubs.find(j) != hubs.end()) continue;
 
 				double aux = 0.0;
 				for(int i = 0; i < instance.get_n(); i++)
@@ -131,7 +144,71 @@ solution ils::constructor(){
 		hubs.push_back(RCL[ rand() % RCL.size() ]);*/
 
 		pair< double, int > g_min = *min_element(g.begin(), g.end(), my_comparison);
-		hubs.push_back(g_min.second);
+		hubs.insert(g_min.second);
+	}
+	sol.set_alloc_hubs(hubs);
+
+	// Step 2 - Assignment of the r hubs - assigned_hubs
+	sol.assign_hubs();
+
+	// Step 3 - Route traffics
+	sol.route_traffics();
+
+	return sol;
+}
+
+solution ils::greedy_randomized_constructor(){
+	vector< vector< double > > traffics = instance.get_traffics();
+	vector< vector< double > > distances = instance.get_distances();
+
+	solution sol(instance, p, r);
+
+	// Step 1 - Locating the hubs - alloc_hubs
+	set< unsigned > hubs;
+	for(int p = 0; p < sol.get_p(); p++){
+		// Calculating the g(h) for each node unselected as hub - The Candidate List
+		vector< pair< double, unsigned > > g;
+		for(unsigned h = 0; h < mesh.size(); h++){
+			// Adaptive part of the procedure
+			if(hubs.find(mesh[h]) != hubs.end()) continue;
+
+			// Creating the e(j,h)
+			vector< double > e;
+			for(int j = 0; j < instance.get_n(); j++){
+				// Adaptive part of the procedure
+				if(hubs.find(j) != hubs.end()) continue;
+
+				double aux = 0.0;
+				for(int i = 0; i < instance.get_n(); i++)
+					aux += traffics[j][i];
+				aux *= distances[j][ mesh[h] ];
+				e.push_back(aux);
+			}
+
+			// Sorting the elements of e(j,h)
+			sort(e.begin(), e.end());
+
+			// Choosing the k = |n/p| elements to compose g(h)
+			int k = instance.get_n()/sol.get_p();
+			double sum = 0.0;
+			for(int j = 0; j < k; j++)
+				sum += e[j];
+			g.push_back(make_pair(sum, mesh[h]));
+		}
+
+		// Creating the RCL based on g(h) -- GRASP
+		double g_min = (*min_element(g.begin(), g.end(), my_comparison)).first;
+		double g_max = (*max_element(g.begin(), g.end(), my_comparison)).first;
+		vector< unsigned > RCL;
+		for(unsigned i = 0; i < g.size(); i++)
+			if(g[i].first <= (g_min + this->alpha*(g_max - g_min)))
+				RCL.push_back(g[i].second);
+
+		// Selecting randomly the hub from RCL
+		hubs.insert(RCL[ rand() % RCL.size() ]);
+
+//		pair< double, int > g_min = *min_element(g.begin(), g.end(), my_comparison);
+//		hubs.push_back(g_min.second);
 	}
 	sol.set_alloc_hubs(hubs);
 
@@ -206,8 +283,12 @@ solution& ils::r_neighborhood1( solution& p_sol ){
 	for(unsigned i = 0; i < mesh.size(); i++){
 		if(p_sol.is_hub(mesh[i])) continue;
 		int h = rand() % p; // hub to be exchanged
-		vector< int > hubs(p_sol.get_alloc_hubs());
-		hubs[h] = mesh[i];
+		set< unsigned > hubs(p_sol.get_alloc_hubs());
+		set< unsigned >::iterator it = hubs.begin();
+		advance(it, h);
+		hubs.erase(it);
+		hubs.insert(mesh[i]);
+//		hubs[h] = mesh[i];
 
 		solution s1(instance, p, r);
 		s1.set_alloc_hubs(hubs);
@@ -215,10 +296,13 @@ solution& ils::r_neighborhood1( solution& p_sol ){
 		s1.route_traffics();
 		neighbors.push_back(s1);
 //		if(s1.get_cost() < p_sol.get_cost()) break;
+//			set_rn1(neighbors);
+//			return rn1[ rn1.size() - 1 ];
 	}
 	set_rn1(neighbors);
 
 	return *min_element(rn1.begin(), rn1.end(), solution::my_sol_comparison);
+//	return rn1[ rn1.size() - 1 ];
 }
 
 solution& ils::closest2_n1( solution& p_sol ){
@@ -227,14 +311,16 @@ solution& ils::closest2_n1( solution& p_sol ){
 	 * in p_sol (partial solution) given.
 	 */
 	// TODO 1.1.Check the generation of previously calculated solutions as neighbors
-	//		There's many intersection of neighbors
+	//		There's many intersection in this neighborhood
 
 	vector< vector< double > > distances = instance.get_distances();
 
 	// Generating Neighborhood
-	vector< solution > neighbors; // Analyzing the 2 closest indexes points for each hub
-	vector< int > alloc_hubs = p_sol.get_alloc_hubs();
-	for(int i = 0; i < p; i++){
+	vector< solution > neighbors; // Analyzing the 2 nearest points for each hub
+	set< unsigned > alloc_hubs = p_sol.get_alloc_hubs();
+	set< unsigned >::iterator i;
+	unsigned count = 0;
+	for(i = alloc_hubs.begin(); i != alloc_hubs.end(); i++, count++){
 		// Finding the first two non-hub nodes
 		unsigned j = 0;
 		while(p_sol.is_hub(mesh[j]))
@@ -243,27 +329,33 @@ solution& ils::closest2_n1( solution& p_sol ){
 		while(p_sol.is_hub(mesh[k]))
 			k++;
 		pair< unsigned, double > min1, min2;
-		if(distances[alloc_hubs[i]][mesh[k]] < distances[alloc_hubs[i]][mesh[j]]){
-			min1 = make_pair(mesh[k], distances[alloc_hubs[i]][mesh[k]]);
-			min2 = make_pair(mesh[j], distances[alloc_hubs[i]][mesh[j]]);
+		if(distances[*i][mesh[k]] < distances[*i][mesh[j]]){
+			min1 = make_pair(mesh[k], distances[*i][mesh[k]]);
+			min2 = make_pair(mesh[j], distances[*i][mesh[j]]);
 		} else {
-			min2 = make_pair(mesh[k], distances[alloc_hubs[i]][mesh[k]]);
-			min1 = make_pair(mesh[j], distances[alloc_hubs[i]][mesh[j]]);
+			min2 = make_pair(mesh[k], distances[*i][mesh[k]]);
+			min1 = make_pair(mesh[j], distances[*i][mesh[j]]);
 		}
 		// Getting the two Euclidian closest non-hub nodes
 		for(unsigned j = k + 1; j < mesh.size(); j++){
-			if(alloc_hubs[i] == mesh[j] || p_sol.is_hub(mesh[j])) continue; // main diagonal & hub nodes avoidance
-			if(distances[alloc_hubs[i]][mesh[j]] < min1.second){
+			if(*i == mesh[j] || p_sol.is_hub(mesh[j])) continue; // main diagonal & hub nodes avoidance
+			if(distances[*i][mesh[j]] < min1.second){
 				min2 = min1;
-				min1 = make_pair(mesh[j], distances[alloc_hubs[i]][mesh[j]]);
+				min1 = make_pair(mesh[j], distances[*i][mesh[j]]);
 			}
 		}
 
 		// Making the solution objects
-		vector< int > hubs1(alloc_hubs);
-		vector< int > hubs2(alloc_hubs);
-		hubs1[i] = min1.first;
-		hubs2[i] = min2.first;
+		set< unsigned > hubs1(alloc_hubs);
+		set< unsigned > hubs2(alloc_hubs);
+		set< unsigned >::iterator it = hubs1.begin();
+		advance(it, count);
+		hubs1.erase(it);
+		hubs1.insert(min1.first);
+		it = hubs2.begin();
+		advance(it, count);
+		hubs2.erase(it);
+		hubs2.insert(min2.first);
 
 		solution s1(instance, p, r);
 		solution s2(instance, p, r);
@@ -287,15 +379,15 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	// Generating Neighborhood A
 
 	vector< solution > neighbors;
-	vector< int > hubs(p_sol.get_alloc_hubs());
+	set< unsigned > hubs(p_sol.get_alloc_hubs());
 	for(int i = 0; i < instance.get_n(); i++){
-		vector< int > assigned_hubs(p_sol.get_assigned_hubs(i));
+		vector< unsigned > assigned_hubs(p_sol.get_assigned_hubs(i));
 
 		// Finding the symmetric difference
-		vector< int > to_assign;
-		for(unsigned j = 0; j < hubs.size(); j++)
-			if(find(assigned_hubs.begin(), assigned_hubs.end(), hubs[j]) == assigned_hubs.end())
-				to_assign.push_back(hubs[j]);
+		vector< unsigned > to_assign;
+		for(set< unsigned >::iterator j = hubs.begin(); j != hubs.end(); j++)
+			if(find(assigned_hubs.begin(), assigned_hubs.end(), *j) == assigned_hubs.end())
+				to_assign.push_back(*j);
 
 		// Generating the neighbors
 		for(int j = 0; j < this->r; j++)
@@ -304,10 +396,16 @@ solution& ils::neighborhood_a( solution& p_sol ){
 				s1.set_alloc_hubs(hubs);
 				s1.set_assigned_hubs(p_sol.get_assigned_hubs());
 				s1.set_assigned_hub(i, j, to_assign[k]);
-				s1.route_traffics();
+//				s1.route_traffics();
+				s1.set_cost(p_sol.get_cost());
+				s1.set_f_chosen(p_sol.get_f_chosen());
+				s1.set_s_chosen(p_sol.get_s_chosen());
+				s1.route_partial_traffics(i);
 				neighbors.push_back(s1);
-//				if(s1.get_cost() < p_sol.get_cost())
-//					return neighbors;
+				if(s1.get_cost() < p_sol.get_cost()){
+					set_na(neighbors);
+					return na[ na.size() - 1 ];
+				}
 			}
 	}
 
@@ -316,12 +414,7 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	return *min_element(na.begin(), na.end(), solution::my_sol_comparison);
 }
 
-solution& ils::execute(){
-	// Pre-processing
-	preprocessing();
-
-	// Processing
-
+void ils::_ils(){
 	// Constructing initial solution
 	solution initial = constructor();
 	solution improved = initial;
@@ -333,6 +426,7 @@ solution& ils::execute(){
 //		improved = local_search_c2n1(improved);
 		improved = local_search_rn1(improved);
 
+		// TODO 3.Evaluation of more than just one solution in the local search
 		// Acceptance criterion & VND
 		if(!first){
 			if(improved.get_total_cost() < best.get_total_cost()) {
@@ -353,11 +447,82 @@ solution& ils::execute(){
 		// Shaking phase
 		improved = rn1[rand() % rn1.size()];
 
+		// TODO 2.3.Check the cost of logs storage
 		// Saving the execution logs
 		it_log.push_back(make_pair(best.get_total_cost(), k++));
 		times.push_back(((double) timer.getMilliSpan() / 1000));
 	}
+}
 
+void ils::_ms_ils(){
+	unsigned j = 1, l = 0;
+	bool _first = true;
+
+	// TODO 2.1.Update the local best or the global one
+	// TODO 2.2.Fixed iterations or without improvement
+	// Multi-Start iterations
+	while(j < max_r_iterations){
+		// Constructing initial solution
+		solution initial = greedy_randomized_constructor();
+		solution improved = initial;
+		solution _best;
+
+		unsigned i = 1, k = 0;
+		bool first = true;
+		while(i < max_iterations){
+			// Local Search
+//			improved = local_search_c2n1(improved);
+			improved = local_search_rn1(improved);
+
+			// Acceptance criterion & VND
+			if(!first){
+				if(improved.get_total_cost() < _best.get_total_cost()) {
+					_best = improved;
+//					set_best(improved);
+					i = 1;
+				} else { // Testing the LS_a only when LS_h doesn't improve the solution
+					improved = local_search_na(improved);
+					if(improved.get_total_cost() < _best.get_total_cost()){
+						_best = improved;
+//						set_best(improved);
+						i = 1;
+					}else i++;
+				}
+			} else {
+				_best = improved;
+				first = false;
+			}
+
+			// Shaking phase
+			improved = rn1[rand() % rn1.size()];
+
+			// Saving the execution logs
+			it_log.push_back(make_pair(_best.get_total_cost(), k++));
+			times.push_back(((double) timer.getMilliSpan() / 1000));
+		}
+
+		// MS Acceptance criterion
+		if(_first){
+			best = _best;
+			_first = false;
+		} else if(_best.get_total_cost() < best.get_total_cost()) {
+			best = _best;
+			j = 1;
+		} else j++;
+
+		// Saving the MS execution logs
+		it_log.push_back(make_pair(best.get_total_cost(), l++));
+		times.push_back(((double) timer.getMilliSpan() / 1000));
+	}
+}
+
+solution& ils::execute(){
+	// Pre-processing
+	preprocessing();
+
+	// Processing
+	if( alpha == 0.0 ) _ils();
+	else _ms_ils();
 
 	// Post-processing
 //	set_best(local_search_rn1(best));

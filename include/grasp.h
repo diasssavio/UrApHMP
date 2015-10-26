@@ -10,6 +10,8 @@
 
 #include <utility>
 #include <algorithm>
+#include <iterator>
+#include <set>
 #include <cstdlib>
 #include <ctime>
 #include <limits>
@@ -38,7 +40,7 @@ private:
 	vector< int > mesh;
 
 	// Iterations
-	vector< pair< double, int > > it_log;
+	vector< pair< double, unsigned > > it_log;
 	vector< double > times;
 	vector< int > path;
 	FWChrono timer;
@@ -60,7 +62,7 @@ public:
 	size_t get_max_iterations();
 	uraphmp& get_instance();
 	solution& get_best();
-	vector< pair< double, int > >& get_it_log();
+	vector< pair< double, unsigned > >& get_it_log();
 	vector< double >& get_times();
 	vector< int >& get_path();
 
@@ -71,20 +73,14 @@ public:
 	solution local_search_rn1( solution& );
 	solution local_search_c2n1( solution& );
 	solution local_search_na( solution& );
-//	solution local_search_n2( solution& );
-//	solution local_search_rn2( solution& );
 
 	solution neighborhood1( solution& );
 	solution r_neighborhood1( solution& );
 	solution closest2_n1( solution& );
 	solution neighborhood_a( solution& );
-//	vector< solution > neighborhood2( solution& );
-//	vector< solution > r_neighborhood2( solution& );
 
 	solution path_relinking( solution&, solution& );
 
-	// TODO 4.Use a Hash Table to avoid calculus of same solutions on the neighbors **
-	// 		Check whether the same hubs were allocated in a solution so to avoid the calculation
 	solution& execute();
 };
 

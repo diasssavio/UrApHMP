@@ -7,6 +7,7 @@
 //============================================================================
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <cstdio>
 #include <ctime>
@@ -19,21 +20,27 @@
 
 using namespace std;
 
-
+template<typename T>
+T string_to(const string& s){
+	istringstream i(s);
+	T x;
+	if (!(i >> x)) return 0;
+	return x;
+}
 
 int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
 
-	srand(time(NULL));
+	srand(string_to<int>(args[3]));
 
 	int n;
 
 	scanf("%d", &n);
-	double X = 1.0, alpha_1 = 0.2, delta = 1.0;
+	double X = 3.0, alpha_1 = 0.75, delta = 2.0;
 	uraphmp instance(n, X, alpha_1, delta);
-	int p = 5;
-	int r = 3;
+	int p = string_to<int>(args[1]);
+	int r = string_to<int>(args[2]);
 
 	// Reading file information
 	vector< vector< double> > aux;
@@ -62,25 +69,28 @@ int main(int argc, char* args[]) {
 	aux.clear();
 
 
-	int max_iterations = 0.2 * n;
+	int max_iterations = 0.1 * n;
+	int max_r = max_iterations / 2;
+	double alpha_2 = 0.2;
 
-//	double alpha_2 = 0.2;
-//	grasp GRASP(instance, max_iterations, p, r, alpha_2, timer);
-//	solution result = GRASP.execute();
+//	grasp ILS(instance, max_iterations, p, r, alpha_2, timer);
+//	solution result = ILS.execute();
 
 	ils ILS(instance, max_iterations, p, r, timer);
+//	ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
 	solution result = ILS.execute();
 
 	timer.stop();
-	printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
-	result.show_data();
+//	printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
+	printf("%.2lf,", timer.getStopTime());
+//	result.show_data();
 
-	printf("\nIT_LOG:\n");
-	vector< pair< double, int> > it_log = ILS.get_it_log();
+//	printf("\nIT_LOG:\n");
+	vector< pair< double, unsigned> > it_log = ILS.get_it_log();
 	vector< double > times = ILS.get_times();
 	double min_time = 0.0;
 	for(unsigned i = 0; i < it_log.size(); i++){
-		printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
+//		printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
 
 		if(it_log[i].first == result.get_total_cost() && min_time == 0.0)
 			min_time = times[i];
@@ -91,7 +101,7 @@ int main(int argc, char* args[]) {
 //	for(unsigned i = 0; i < path.size(); i++)
 //		printf("%d\t", path[i]);
 
-	printf("\nMIN_TIME: %.2lf\n", min_time);
+	printf("%.2lf,%.2lf\n", min_time, result.get_total_cost());
 
 	return 0;
 }

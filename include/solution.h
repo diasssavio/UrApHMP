@@ -9,9 +9,11 @@
 #define SOLUTION_H_
 
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <utility>
 #include <limits>
+#include <iostream>
 
 #include "../include/UrApHMP.h"
 
@@ -27,10 +29,10 @@ private:
 	int r; // Number of hubs to be assigned to each node
 
 	// Solution itself
-	vector< int > alloc_hubs; // Allocated hubs. Size: p. H
-	vector< vector< int > > assigned_hubs; // Assigned hubs to each node. Size: nxr. A
-	vector< vector< int > > f_chosen; // First chosen hub to route between i and j. Size: nxn. H(1)
-	vector< vector< int > > s_chosen; // Second chosen hub to route between i and j. Size: nxn. H(2)
+	set< unsigned > alloc_hubs; // Allocated hubs. Size: p. H
+	vector< vector< unsigned > > assigned_hubs; // Assigned hubs to each node. Size: nxr. A
+	vector< vector< unsigned > > f_chosen; // First chosen hub to route between i and j. Size: nxn. H(1)
+	vector< vector< unsigned > > s_chosen; // Second chosen hub to route between i and j. Size: nxn. H(2)
 
 	// Solution cost
 	vector< vector< double > > cost; // Cost matrix to go from i to j using H(1)ij and H(2)ij. Size: nxn.
@@ -50,11 +52,11 @@ public:
 	void set_p( int );
 	void set_r( int );
 
-	void set_alloc_hubs( const vector< int >& );
-	void set_assigned_hubs( vector< vector< int > >& );
-	void set_assigned_hub( int, int, int );
-	void set_f_chosen( vector< vector< int > >& );
-	void set_s_chosen( vector< vector< int > >& );
+	void set_alloc_hubs( const set< unsigned >& );
+	void set_assigned_hubs( vector< vector< unsigned > >& );
+	void set_assigned_hub( unsigned, unsigned, unsigned );
+	void set_f_chosen( vector< vector< unsigned > >& );
+	void set_s_chosen( vector< vector< unsigned > >& );
 
 	void set_cost( vector< vector< double > >& );
 	void set_hubs_cost( vector< double >& );
@@ -65,11 +67,11 @@ public:
 	int get_p();
 	int get_r();
 
-	const vector< int >& get_alloc_hubs() const;
-	vector< vector< int > >& get_assigned_hubs();
-	vector< int >& get_assigned_hubs( int );
-	vector< vector< int > >& get_f_chosen();
-	vector< vector< int > >& get_s_chosen();
+	const set< unsigned >& get_alloc_hubs() const;
+	vector< vector< unsigned > >& get_assigned_hubs();
+	vector< unsigned >& get_assigned_hubs( int );
+	vector< vector< unsigned > >& get_f_chosen();
+	vector< vector< unsigned > >& get_s_chosen();
 
 	vector< vector< double > >& get_cost();
 	vector< double >& get_hubs_cost();
@@ -80,7 +82,7 @@ public:
 	static bool my_comparison( pair< double, int >, pair< double, int > );
 	static bool my_sol_comparison( solution, solution );
 	void show_data();
-	bool is_hub( int );
+	bool is_hub( unsigned );
 
 	void assign_hubs();
 	void assign_partial_hubs( int, int, int );

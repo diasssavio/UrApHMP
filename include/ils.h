@@ -22,6 +22,8 @@ class ils {
 private:
 	// ILS Parameters
 	size_t max_iterations; // Max number of iterations
+	size_t max_r_iterations;
+	double alpha;
 
 	// Input instance
 	uraphmp instance;
@@ -32,7 +34,7 @@ private:
 	solution best;
 
 	// Preprocessed mesh of probable hubs
-	vector< int > mesh;
+	vector< unsigned > mesh;
 
 	// Current Neighbors
 	vector< solution > rn1;
@@ -40,7 +42,7 @@ private:
 	vector< solution > c2n1;
 
 	// Logs
-	vector< pair< double, int > > it_log;
+	vector< pair< double, unsigned > > it_log;
 	vector< double > times;
 	FWChrono timer;
 
@@ -49,8 +51,11 @@ private:
 	void set_c2n1( const vector<solution>& );
 	void set_na( const vector<solution>& );
 	void set_rn1( const vector<solution>& );
+	void _ils();
+	void _ms_ils();
 
 public:
+	ils( uraphmp&, size_t, size_t, double, int, int, FWChrono& );
 	ils( uraphmp&, size_t, int, int, FWChrono& );
 	virtual ~ils();
 
@@ -59,7 +64,7 @@ public:
 	size_t get_max_iterations() const;
 	const uraphmp& get_instance() const;
 	const vector< double >& get_times() const;
-	const vector< pair<double, int> >& get_it_log() const;
+	const vector< pair<double, unsigned> >& get_it_log() const;
 
 	// Setters
 	void set_best( const solution& );
@@ -70,6 +75,7 @@ public:
 	void preprocessing();
 
 	solution constructor();
+	solution greedy_randomized_constructor();
 
 	solution local_search_rn1( solution& );
 	solution local_search_c2n1( solution& );
@@ -80,6 +86,8 @@ public:
 	solution& neighborhood_a( solution& );
 
 	// Algorithm Execution
+	// TODO 4.Use a Hash Table to avoid calculus of same solutions on the neighbors **
+	// 		Check whether the same hubs were allocated in a solution so to avoid the calculation
 	solution& execute();
 };
 
