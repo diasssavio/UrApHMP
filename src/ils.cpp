@@ -382,12 +382,14 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	set< unsigned > hubs(p_sol.get_alloc_hubs());
 	for(int i = 0; i < instance.get_n(); i++){
 		vector< unsigned > assigned_hubs(p_sol.get_assigned_hubs(i));
+		sort(assigned_hubs.begin(), assigned_hubs.end());
 
 		// Finding the symmetric difference
-		vector< unsigned > to_assign;
-		for(set< unsigned >::iterator j = hubs.begin(); j != hubs.end(); j++)
-			if(find(assigned_hubs.begin(), assigned_hubs.end(), *j) == assigned_hubs.end())
-				to_assign.push_back(*j);
+		vector< unsigned > to_assign(p - r);
+		vector< unsigned >::iterator it = set_symmetric_difference(hubs.begin(), hubs.end(), assigned_hubs.begin(), assigned_hubs.end(), to_assign.begin());
+//		for(set< unsigned >::iterator j = hubs.begin(); j != hubs.end(); j++)
+//			if(find(assigned_hubs.begin(), assigned_hubs.end(), *j) == assigned_hubs.end())
+//				to_assign.push_back(*j);
 
 		// Generating the neighbors
 		for(int j = 0; j < this->r; j++)

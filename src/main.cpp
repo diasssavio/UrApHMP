@@ -3,7 +3,7 @@
 // Author      : Sávio S. Dias
 // Version     : 1.0
 // Copyright   :
-// Description : A GRASP-based heuristic for the UrApHMP
+// Description : A GRASP/ILS-based heuristic for the UrApHMP
 //============================================================================
 
 #include <iostream>
@@ -31,13 +31,14 @@ T string_to(const string& s){
 int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
-
-	srand(string_to<int>(args[3]));
+//	time_t seed = time(NULL);
+	time_t seed = string_to<int>(args[3]);
+	srand(seed);
 
 	int n;
 
 	scanf("%d", &n);
-	double X = 3.0, alpha_1 = 0.75, delta = 2.0;
+	double X = 1.0, alpha_1 = 0.2, delta = 1.0;
 	uraphmp instance(n, X, alpha_1, delta);
 	int p = string_to<int>(args[1]);
 	int r = string_to<int>(args[2]);
@@ -102,6 +103,7 @@ int main(int argc, char* args[]) {
 //		printf("%d\t", path[i]);
 
 	printf("%.2lf,%.2lf\n", min_time, result.get_total_cost());
+//	cout << "," << seed << endl;
 
 	return 0;
 }
