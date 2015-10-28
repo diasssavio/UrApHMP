@@ -35,94 +35,52 @@ solution::~solution() {
 
 }
 
-void solution::set_instance( uraphmp& instance ){
-	this->instance = instance;
-}
+void solution::set_instance( uraphmp& instance ){ this->instance = instance; }
 
-void solution::set_p( int p ){
-	this->p = p;
-}
+void solution::set_p( int p ){ this->p = p; }
 
-void solution::set_r( int r ){
-	this->r = r;
-}
+void solution::set_r( int r ){ this->r = r; }
 
-void solution::set_alloc_hubs( const set< unsigned >& alloc_hubs ){
-	this->alloc_hubs = alloc_hubs;
+void solution::set_alloc_hubs( const set< unsigned >& alloc_hubs ){ this->alloc_hubs = alloc_hubs; }
 
-	// Sorting the hubs
-//	sort(this->alloc_hubs.begin(), this->alloc_hubs.end());
-}
+void solution::set_assigned_hubs( vector< vector< unsigned > >& assigned_hubs ){ this->assigned_hubs = assigned_hubs; }
 
-void solution::set_assigned_hubs( vector< vector< unsigned > >& assigned_hubs ){
-	this->assigned_hubs = assigned_hubs;
-}
+void solution::set_assigned_hub( unsigned i, unsigned j, unsigned assigned_hub ){ this->assigned_hubs[i][j] = assigned_hub; }
 
-void solution::set_assigned_hub( unsigned i, unsigned j, unsigned assigned_hub ){
-	this->assigned_hubs[i][j] = assigned_hub;
-}
+void solution::set_f_chosen( vector< vector< unsigned > >& f_chosen ){ this->f_chosen = f_chosen; }
 
-void solution::set_f_chosen( vector< vector< unsigned > >& f_chosen ){
-	this->f_chosen = f_chosen;
-}
-
-void solution::set_s_chosen( vector< vector< unsigned > >& s_chosen ){
-	this->s_chosen = s_chosen;
-}
+void solution::set_s_chosen( vector< vector< unsigned > >& s_chosen ){ this->s_chosen = s_chosen; }
 
 void solution::set_cost( vector< vector< double > >& cost ){
 	this->cost = cost;
 	double _cost = 0.0;
-	for(int i = 0; i < instance.get_n(); i++){
-		//if(is_hub(i)) continue;
-		for(int j = 0; j < instance.get_n(); j++){
-			//if(is_hub(j)) continue;
+	for(int i = 0; i < instance.get_n(); i++)
+		for(int j = 0; j < instance.get_n(); j++)
 			_cost += this->cost[i][j];
-		}
-	}
 	this->_cost = _cost;
 }
 
-void solution::set_hubs_cost( vector< double >& hubs ){
-	this->hubs_cost = hubs;
-}
+void solution::set_hubs_cost( vector< double >& hubs ){ this->hubs_cost = hubs; }
 
-uraphmp& solution::get_instance(){
-	return this->instance;
-}
+uraphmp& solution::get_instance(){ return this->instance; }
 
-int solution::get_p(){
-	return this->p;
-}
+int solution::get_p(){ return this->p; }
 
-int solution::get_r(){
-	return this->r;
-}
+int solution::get_r(){ return this->r; }
 
-const set< unsigned >& solution::get_alloc_hubs() const{
-	return this->alloc_hubs;
-}
+const set< unsigned >& solution::get_alloc_hubs() const{ return this->alloc_hubs; }
 
-vector< vector< unsigned > >& solution::get_assigned_hubs(){
-	return this->assigned_hubs;
-}
-vector< unsigned >& solution::get_assigned_hubs( int i ){
-	return this->assigned_hubs[i];
-}
-vector< vector< unsigned > >& solution::get_f_chosen(){
-	return this->f_chosen;
-}
-vector< vector< unsigned > >& solution::get_s_chosen(){
-	return this->s_chosen;
-}
+vector< vector< unsigned > >& solution::get_assigned_hubs(){ return this->assigned_hubs; }
 
-vector< vector< double > >& solution::get_cost(){
-	return this->cost;
-}
+vector< unsigned >& solution::get_assigned_hubs( int i ){ return this->assigned_hubs[i]; }
 
-vector< double >& solution::get_hubs_cost(){
-	return this->hubs_cost;
-}
+vector< vector< unsigned > >& solution::get_f_chosen(){ return this->f_chosen; }
+
+vector< vector< unsigned > >& solution::get_s_chosen(){ return this->s_chosen; }
+
+vector< vector< double > >& solution::get_cost(){ return this->cost; }
+
+vector< double >& solution::get_hubs_cost(){ return this->hubs_cost; }
 
 double solution::get_total_hubs_cost(){
 	double cost = 0.0;
@@ -132,9 +90,7 @@ double solution::get_total_hubs_cost(){
 	return cost;
 }
 
-double solution::get_total_cost(){
-	return _cost;
-}
+double solution::get_total_cost(){ return _cost; }
 
 void solution::generate_hubs_cost(){
 	vector< vector< double > > traffics = instance.get_traffics();
@@ -220,13 +176,9 @@ void solution::show_data(){
 	printf("\n\nTOTAL COST: %.2lf\n\n", get_total_cost());
 }
 
-bool solution::is_hub( unsigned index ){
-	return (alloc_hubs.find(index) != alloc_hubs.end());
-}
+bool solution::is_hub( unsigned index ){ return (alloc_hubs.find(index) != alloc_hubs.end()); }
 
-bool solution::my_comparison( pair< double, int > p1, pair< double, int > p2 ){
-	return (p1.first < p2.first);
-}
+bool solution::my_comparison( pair< double, int > p1, pair< double, int > p2 ){ return (p1.first < p2.first); }
 
 void solution::assign_hubs(){
 	vector< vector< unsigned > > assigned;
@@ -239,12 +191,9 @@ void solution::assign_hubs(){
 		vector< pair< double, unsigned> > alloc_value;
 		set< unsigned >::iterator it;
 		for(it = alloc_hubs.begin(); it != alloc_hubs.end(); it++){
-			double value = 0.0;
-
-			for(int j = 0; j < instance.get_n(); j++)
-				value += traffics[i][j];
+			double value = accumulate(traffics[i].begin(), traffics[i].end(), 0.0);
 			value *= distances[i][*it];
-
+			
 			for(int j = 0; j < instance.get_n(); j++)
 				value += traffics[i][j] * distances[*it][j];
 			alloc_value.push_back(make_pair(value, *it));
@@ -264,6 +213,8 @@ void solution::assign_hubs(){
 
 	set_assigned_hubs(assigned);
 }
+
+void solution::assign_partial_hubs( int i, int j, int new_hub ){ this->assigned_hubs[i][j] = new_hub; }
 
 void solution::route_traffics(){
 	vector< vector< double > > traffics = instance.get_traffics();
@@ -315,10 +266,6 @@ void solution::route_traffics(){
 	set_f_chosen(H1);
 	set_s_chosen(H2);
 	generate_hubs_cost();
-}
-
-void solution::assign_partial_hubs( int i, int j, int new_hub ){
-	this->assigned_hubs[i][j] = new_hub;
 }
 
 void solution::route_partial_traffics( int i ){

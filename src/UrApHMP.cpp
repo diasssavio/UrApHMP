@@ -7,54 +7,31 @@
 
 #include "../include/UrApHMP.h"
 
-uraphmp::uraphmp(){
-}
+uraphmp::uraphmp(){ }
 
-uraphmp::uraphmp( int n ) : n(n) {
-}
+uraphmp::uraphmp( int n ) : n(n) { }
 
-uraphmp::uraphmp( int n, double X, double a, double del ) : n(n), collection_rate(X), transfer_rate(a), distribution_rate(del) {
-}
+uraphmp::uraphmp( int n, double X, double a, double del ) : n(n), collection_rate(X), transfer_rate(a), distribution_rate(del) { }
 
-uraphmp::~uraphmp() {
+uraphmp::~uraphmp() { }
 
-}
+void uraphmp::set_n( int n ){ this->n = n; }
 
-void uraphmp::set_n( int n ){
-	this->n = n;
-}
+void uraphmp::set_traffics( vector< vector< double> >& traffics){ this->traffics = traffics; }
 
-void uraphmp::set_traffics( vector< vector< double> >& traffics){
-	this->traffics = traffics;
-}
+void uraphmp::set_distances( vector< vector< double> >& distances){ this->distances = distances; }
 
-void uraphmp::set_distances( vector< vector< double> >& distances){
-	this->distances = distances;
-}
+int uraphmp::get_n(){ return this->n; }
 
-int uraphmp::get_n(){
-	return this->n;
-}
+const vector< vector< double > >& uraphmp::get_traffics() const{ return this->traffics; }
 
-const vector< vector< double > >& uraphmp::get_traffics() const{
-	return this->traffics;
-}
+const vector< vector< double > >& uraphmp::get_distances() const{ return this->distances; }
 
-const vector< vector< double > >& uraphmp::get_distances() const{
-	return this->distances;
-}
+double uraphmp::get_collection_rate(){ return this->collection_rate; }
 
-double uraphmp::get_collection_rate(){
-	return this->collection_rate;
-}
+double uraphmp::get_transfer_rate(){ return this->transfer_rate; }
 
-double uraphmp::get_transfer_rate(){
-	return this->transfer_rate;
-}
-
-double uraphmp::get_distribution_rate(){
-	return this->distribution_rate;
-}
+double uraphmp::get_distribution_rate(){ return this->distribution_rate; }
 
 void uraphmp::show_data(){
 	printf("number of points: %d\n\n", n);

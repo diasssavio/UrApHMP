@@ -17,6 +17,7 @@
 #include <limits>
 #include <iostream>
 #include "../include/FWChrono.h"
+#include "../include/mt19937ar.h"
 #include "../include/solution.h"
 #include "../include/UrApHMP.h"
 

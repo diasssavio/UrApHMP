@@ -13,6 +13,7 @@
 #include <ctime>
 
 #include "../include/FWChrono.h"
+#include "../include/mt19937ar.h"
 #include "../include/grasp.h"
 #include "../include/ils.h"
 #include "../include/solution.h"
@@ -32,39 +33,33 @@ int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
 //	time_t seed = time(NULL);
-	time_t seed = string_to<int>(args[3]);
-	srand(seed);
+	unsigned long seed = string_to<unsigned long>(args[3]);
+	// srand(seed);
+	init_genrand(seed);
 
 	int n;
 
 	scanf("%d", &n);
-	double X = 1.0, alpha_1 = 0.2, delta = 1.0;
+	double X = 3.0, alpha_1 = 0.75, delta = 2.0;
 	uraphmp instance(n, X, alpha_1, delta);
 	int p = string_to<int>(args[1]);
 	int r = string_to<int>(args[2]);
 
 	// Reading file information
-	vector< vector< double> > aux;
+	vector< vector< double> > aux(n);
 	for(int i = 0; i < n; i++){
-		vector< double > aux2;
-		for(int j = 0; j < n; j++){
-			double temp;
-			scanf("%lf", &temp);
-			aux2.push_back(temp);
-		}
-		aux.push_back(aux2);
+		vector< double > aux2(n);
+		for(int j = 0; j < n; j++)
+			scanf("%lf", &aux2[j]);
+		aux[i] = aux2;
 	}
 	instance.set_traffics(aux);
 
-	aux.clear();
 	for(int i = 0; i < n; i++){
-		vector< double > aux2;
-		for(int j = 0; j < n; j++){
-			double temp;
-			scanf("%lf", &temp);
-			aux2.push_back(temp);
-		}
-		aux.push_back(aux2);
+		vector< double > aux2(n);
+		for(int j = 0; j < n; j++)
+			scanf("%lf", &aux2[j]);
+		aux[i] = aux2;
 	}
 	instance.set_distances(aux);
 	aux.clear();

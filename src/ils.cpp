@@ -65,9 +65,7 @@ void ils::preprocessing(){
 		for(int j = 0; j < n; j++){
 			if(h == j) continue;
 
-			double aux = 0.0;
-			for(int i = 0; i < n; i++)
-				aux += traffics[j][i];
+			double aux = accumulate(traffics[j].begin(), traffics[j].end(), 0.0);
 			aux *= distances[j][h];
 			e.push_back(aux);
 		}
@@ -77,17 +75,15 @@ void ils::preprocessing(){
 
 		// Chosing the k = |n/p| elements to compose g(h)
 		int k = n/p;
-		double sum = 0.0;
-		for(int j = 0; j < k; j++)
-			sum += e[j];
+		double sum = accumulate(e.begin(), e.begin() + k, 0.0);
 		aux.push_back(make_pair(sum, h));
 	}
 
 	// Eliminating the x percent most expensive
-	vector< unsigned > mesh;
 	int x = (0.1 * n);
 	sort(aux.begin(), aux.end(), my_comparison);
-	for(unsigned i = 0; i < aux.size() - x; i++)
+	vector< unsigned > mesh;
+	for(unsigned i = 0; i < n - x; i++)
 		mesh.push_back(aux[i].second);
 
 	this->mesh = mesh;
@@ -114,9 +110,7 @@ solution ils::constructor(){
 				// Adaptive part of the procedure
 				if(hubs.find(j) != hubs.end()) continue;
 
-				double aux = 0.0;
-				for(int i = 0; i < instance.get_n(); i++)
-					aux += traffics[j][i];
+				double aux = accumulate(traffics[j].begin(), traffics[j].end(), 0.0);
 				aux *= distances[j][ mesh[h] ];
 				e.push_back(aux);
 			}
@@ -125,23 +119,10 @@ solution ils::constructor(){
 			sort(e.begin(), e.end());
 
 			// Choosing the k = |n/p| elements to compose g(h)
-			int k = instance.get_n()/sol.get_p();
-			double sum = 0.0;
-			for(int j = 0; j < k; j++)
-				sum += e[j];
+			int k = instance.get_n() / sol.get_p();
+			double sum = accumulate(e.begin(), e.begin() + k, 0.0);
 			g.push_back(make_pair(sum, mesh[h]));
 		}
-
-		// Creating the RCL based on g(h) -- GRASP
-		/*double g_min = (*min_element(g.begin(), g.end(), my_comparison)).first;
-		double g_max = (*max_element(g.begin(), g.end(), my_comparison)).first;
-		vector< int > RCL;
-		for(unsigned i = 0; i < g.size(); i++)
-			if(g[i].first <= (g_min + this->alpha*(g_max - g_min)))
-				RCL.push_back(g[i].second);
-
-		// Selecting randomly the hub from RCL
-		hubs.push_back(RCL[ rand() % RCL.size() ]);*/
 
 		pair< double, int > g_min = *min_element(g.begin(), g.end(), my_comparison);
 		hubs.insert(g_min.second);
@@ -178,9 +159,7 @@ solution ils::greedy_randomized_constructor(){
 				// Adaptive part of the procedure
 				if(hubs.find(j) != hubs.end()) continue;
 
-				double aux = 0.0;
-				for(int i = 0; i < instance.get_n(); i++)
-					aux += traffics[j][i];
+				double aux = accumulate(traffics[j].begin(), traffics[j].end(), 0.0);
 				aux *= distances[j][ mesh[h] ];
 				e.push_back(aux);
 			}
@@ -190,9 +169,7 @@ solution ils::greedy_randomized_constructor(){
 
 			// Choosing the k = |n/p| elements to compose g(h)
 			int k = instance.get_n()/sol.get_p();
-			double sum = 0.0;
-			for(int j = 0; j < k; j++)
-				sum += e[j];
+			double sum = accumulate(e.begin(), e.begin() + k, 0.0);
 			g.push_back(make_pair(sum, mesh[h]));
 		}
 
@@ -205,7 +182,7 @@ solution ils::greedy_randomized_constructor(){
 				RCL.push_back(g[i].second);
 
 		// Selecting randomly the hub from RCL
-		hubs.insert(RCL[ rand() % RCL.size() ]);
+		hubs.insert(RCL[ genrand_int32() % RCL.size() ]);
 
 //		pair< double, int > g_min = *min_element(g.begin(), g.end(), my_comparison);
 //		hubs.push_back(g_min.second);
@@ -282,7 +259,7 @@ solution& ils::r_neighborhood1( solution& p_sol ){
 	vector< solution > neighbors;
 	for(unsigned i = 0; i < mesh.size(); i++){
 		if(p_sol.is_hub(mesh[i])) continue;
-		int h = rand() % p; // hub to be exchanged
+		int h = genrand_int32() % p; // hub to be exchanged
 		set< unsigned > hubs(p_sol.get_alloc_hubs());
 		set< unsigned >::iterator it = hubs.begin();
 		advance(it, h);
@@ -323,11 +300,9 @@ solution& ils::closest2_n1( solution& p_sol ){
 	for(i = alloc_hubs.begin(); i != alloc_hubs.end(); i++, count++){
 		// Finding the first two non-hub nodes
 		unsigned j = 0;
-		while(p_sol.is_hub(mesh[j]))
-			j++;
+		while(p_sol.is_hub(mesh[j])) j++;
 		unsigned k = j + 1;
-		while(p_sol.is_hub(mesh[k]))
-			k++;
+		while(p_sol.is_hub(mesh[k])) k++;
 		pair< unsigned, double > min1, min2;
 		if(distances[*i][mesh[k]] < distances[*i][mesh[j]]){
 			min1 = make_pair(mesh[k], distances[*i][mesh[k]]);
@@ -447,7 +422,7 @@ void ils::_ils(){
 		}
 
 		// Shaking phase
-		improved = rn1[rand() % rn1.size()];
+		improved = rn1[ genrand_int32() % rn1.size() ];
 
 		// TODO 2.3.Check the cost of logs storage
 		// Saving the execution logs
@@ -496,7 +471,7 @@ void ils::_ms_ils(){
 			}
 
 			// Shaking phase
-			improved = rn1[rand() % rn1.size()];
+			improved = rn1[ genrand_int32() % rn1.size() ];
 
 			// Saving the execution logs
 			it_log.push_back(make_pair(_best.get_total_cost(), k++));

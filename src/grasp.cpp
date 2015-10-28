@@ -32,9 +32,7 @@ vector< double >& grasp::get_times(){ return this->times; }
 
 vector< int >& grasp::get_path(){ return this->path; }
 
-bool grasp::my_comparison( pair< double, int > p1, pair< double, int > p2 ){
-	return (p1.first < p2.first);
-}
+bool grasp::my_comparison( pair< double, int > p1, pair< double, int > p2 ){ return (p1.first < p2.first); }
 
 solution grasp::greedy_randomized_construction(){
 	vector< vector< double > > traffics = instance.get_traffics();
@@ -84,7 +82,7 @@ solution grasp::greedy_randomized_construction(){
 				RCL.push_back(g[i].second);
 
 		// Selecting randomly the hub from RCL
-		hubs.insert(RCL[ rand() % RCL.size() ]);
+		hubs.insert(RCL[ genrand_int32() % RCL.size() ]);
 
 //		pair< double, int > g_min = *min_element(g.begin(), g.end(), my_comparison);
 //		hubs.push_back(g_min.second);
@@ -210,7 +208,7 @@ solution grasp::r_neighborhood1( solution& p_sol ){
 	vector< solution > neighbors;
 	for(unsigned i = 0; i < mesh.size(); i++){
 		if(p_sol.is_hub(mesh[i])) continue;
-		int h = rand() % p; // hub to be exchanged
+		int h = genrand_int32() % p; // hub to be exchanged
 		set< unsigned > hubs(p_sol.get_alloc_hubs());
 		set< unsigned >::iterator it = hubs.begin();
 		advance(it, h);
