@@ -43,6 +43,10 @@ private:
 	vector< solution > na;
 	vector< solution > c2n1;
 
+	// Nighborhood monitors
+	int recent_hub;
+	vector< bool > recent_assign;
+
 	// Logs
 	vector< pair< double, unsigned > > it_log;
 	vector< double > times;

@@ -13,6 +13,7 @@ ils::ils( uraphmp& instance, size_t max_iterations, size_t _max_r, double _alpha
 	for(unsigned i = 0; i < mesh.size(); i++)
 		this->mesh[i] = i;
 	this->timer = timer;
+	this->recent_hub = -1;
 }
 
 ils::ils( uraphmp& instance, size_t max_iterations, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r) {
@@ -23,6 +24,8 @@ ils::ils( uraphmp& instance, size_t max_iterations, int p, int r, FWChrono& time
 	this->timer = timer;
 	this->alpha = 0.0;
 	this->max_r_iterations = 0;
+	this->recent_hub = -1;
+	this->recent_assign = std::vector< bool >(instance.get_n());
 }
 
 ils::~ils() { }
@@ -205,9 +208,17 @@ solution ils::local_search_rn1( solution& p_sol ){
 	bool is_improved = true;
 	while(is_improved){
 		improved = r_neighborhood1(partial);
-//		improved = neighbors[ neighbors.size() - 1 ];
-		if(improved.get_total_cost() < partial.get_total_cost())
+		// improved = neighbors[ neighbors.size() - 1 ];
+		if(improved.get_total_cost() < partial.get_total_cost()){
+			std::vector< unsigned > v(1);
+			std::vector< unsigned >::iterator it = set_difference(improved.get_alloc_hubs().begin(), improved.get_alloc_hubs().end(), partial.get_alloc_hubs().begin(), partial.get_alloc_hubs().end(), v.begin());
+			
+			// Defining the recent found hub & restarting the recent assignments
+			recent_hub = v[0];
+			fill_n(recent_assign.begin(), instance.get_n(), false);
+
 			partial = improved;
+		}
 		else is_improved = false;
 	}
 
@@ -223,7 +234,7 @@ solution ils::local_search_c2n1( solution& p_sol ){
 	bool is_improved = true;
 	while(is_improved){
 		improved = closest2_n1(partial);
-//		improved = neighbors[ neighbors.size() - 1 ];
+		// improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
 		else is_improved = false;
@@ -240,7 +251,7 @@ solution ils::local_search_na( solution& p_sol ){
 	bool is_improved = true;
 	while(is_improved){
 		improved = neighborhood_a(partial);
-//		improved = neighbors[ neighbors.size() - 1 ];
+		// improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost())
 			partial = improved;
 		else is_improved = false;
@@ -259,27 +270,37 @@ solution& ils::r_neighborhood1( solution& p_sol ){
 	vector< solution > neighbors;
 	for(unsigned i = 0; i < mesh.size(); i++){
 		if(p_sol.is_hub(mesh[i])) continue;
-		int h = genrand_int32() % p; // hub to be exchanged
+
+		unsigned h;
 		set< unsigned > hubs(p_sol.get_alloc_hubs());
-		set< unsigned >::iterator it = hubs.begin();
-		advance(it, h);
+		set< unsigned >::iterator it;
+
+		// Chosing a hub that wasn't recently inserted
+		bool can_change = false;
+		while(!can_change){
+			it = hubs.begin();
+			h = genrand_int32() % p; // hub to be exchanged
+			advance(it, h);
+			if(*it != recent_hub) can_change = true;
+		}
+
 		hubs.erase(it);
 		hubs.insert(mesh[i]);
-//		hubs[h] = mesh[i];
+		// hubs[h] = mesh[i];
 
 		solution s1(instance, p, r);
 		s1.set_alloc_hubs(hubs);
 		s1.assign_hubs();
 		s1.route_traffics();
 		neighbors.push_back(s1);
-//		if(s1.get_cost() < p_sol.get_cost()) break;
-//			set_rn1(neighbors);
-//			return rn1[ rn1.size() - 1 ];
+		// if(s1.get_cost() < p_sol.get_cost()) break;
+		// 	set_rn1(neighbors);
+		// 	return rn1[ rn1.size() - 1 ];
 	}
 	set_rn1(neighbors);
 
 	return *min_element(rn1.begin(), rn1.end(), solution::my_sol_comparison);
-//	return rn1[ rn1.size() - 1 ];
+	// return rn1[ rn1.size() - 1 ];
 }
 
 solution& ils::closest2_n1( solution& p_sol ){
@@ -356,15 +377,18 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	vector< solution > neighbors;
 	set< unsigned > hubs(p_sol.get_alloc_hubs());
 	for(int i = 0; i < instance.get_n(); i++){
+		// Avoiding the calculation for previous assigned nodes
+		if(recent_assign[i]) continue;
+
 		vector< unsigned > assigned_hubs(p_sol.get_assigned_hubs(i));
 		sort(assigned_hubs.begin(), assigned_hubs.end());
 
 		// Finding the symmetric difference
 		vector< unsigned > to_assign(p - r);
 		vector< unsigned >::iterator it = set_symmetric_difference(hubs.begin(), hubs.end(), assigned_hubs.begin(), assigned_hubs.end(), to_assign.begin());
-//		for(set< unsigned >::iterator j = hubs.begin(); j != hubs.end(); j++)
-//			if(find(assigned_hubs.begin(), assigned_hubs.end(), *j) == assigned_hubs.end())
-//				to_assign.push_back(*j);
+		// for(set< unsigned >::iterator j = hubs.begin(); j != hubs.end(); j++)
+		// 	if(find(assigned_hubs.begin(), assigned_hubs.end(), *j) == assigned_hubs.end())
+		// 		to_assign.push_back(*j);
 
 		// Generating the neighbors
 		for(int j = 0; j < this->r; j++)
@@ -373,7 +397,6 @@ solution& ils::neighborhood_a( solution& p_sol ){
 				s1.set_alloc_hubs(hubs);
 				s1.set_assigned_hubs(p_sol.get_assigned_hubs());
 				s1.set_assigned_hub(i, j, to_assign[k]);
-//				s1.route_traffics();
 				s1.set_cost(p_sol.get_cost());
 				s1.set_f_chosen(p_sol.get_f_chosen());
 				s1.set_s_chosen(p_sol.get_s_chosen());
@@ -384,6 +407,7 @@ solution& ils::neighborhood_a( solution& p_sol ){
 					return na[ na.size() - 1 ];
 				}
 			}
+		recent_assign[i] = true;
 	}
 
 	set_na(neighbors);
