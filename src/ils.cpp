@@ -14,6 +14,7 @@ ils::ils( uraphmp& instance, size_t max_iterations, size_t _max_r, double _alpha
 		this->mesh[i] = i;
 	this->timer = timer;
 	this->recent_hub = -1;
+	this->recent_assign = std::vector< bool >(instance.get_n());
 }
 
 ils::ils( uraphmp& instance, size_t max_iterations, int p, int r, FWChrono& timer ) : max_iterations(max_iterations), p(p), r(r) {
@@ -210,10 +211,9 @@ solution ils::local_search_rn1( solution& p_sol ){
 		improved = r_neighborhood1(partial);
 		// improved = neighbors[ neighbors.size() - 1 ];
 		if(improved.get_total_cost() < partial.get_total_cost()){
+			// Defining the recent found hub & restarting the recent assignments
 			std::vector< unsigned > v(1);
 			std::vector< unsigned >::iterator it = set_difference(improved.get_alloc_hubs().begin(), improved.get_alloc_hubs().end(), partial.get_alloc_hubs().begin(), partial.get_alloc_hubs().end(), v.begin());
-			
-			// Defining the recent found hub & restarting the recent assignments
 			recent_hub = v[0];
 			fill_n(recent_assign.begin(), instance.get_n(), false);
 
@@ -281,7 +281,7 @@ solution& ils::r_neighborhood1( solution& p_sol ){
 			it = hubs.begin();
 			h = genrand_int32() % p; // hub to be exchanged
 			advance(it, h);
-			if(*it != recent_hub) can_change = true;
+			if(*it != recent_hub) can_change = true;				
 		}
 
 		hubs.erase(it);
@@ -377,7 +377,7 @@ solution& ils::neighborhood_a( solution& p_sol ){
 	vector< solution > neighbors;
 	set< unsigned > hubs(p_sol.get_alloc_hubs());
 	for(int i = 0; i < instance.get_n(); i++){
-		// Avoiding the calculation for previous assigned nodes
+		// Avoiding the calculation for previous considered nodes
 		if(recent_assign[i]) continue;
 
 		vector< unsigned > assigned_hubs(p_sol.get_assigned_hubs(i));
@@ -472,20 +472,20 @@ void ils::_ms_ils(){
 		bool first = true;
 		while(i < max_iterations){
 			// Local Search
-//			improved = local_search_c2n1(improved);
+			// improved = local_search_c2n1(improved);
 			improved = local_search_rn1(improved);
 
 			// Acceptance criterion & VND
 			if(!first){
 				if(improved.get_total_cost() < _best.get_total_cost()) {
 					_best = improved;
-//					set_best(improved);
+					// set_best(improved);
 					i = 1;
 				} else { // Testing the LS_a only when LS_h doesn't improve the solution
 					improved = local_search_na(improved);
 					if(improved.get_total_cost() < _best.get_total_cost()){
 						_best = improved;
-//						set_best(improved);
+						// set_best(improved);
 						i = 1;
 					}else i++;
 				}

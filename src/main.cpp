@@ -32,7 +32,7 @@ T string_to(const string& s){
 int main(int argc, char* args[]) {
 	FWChrono timer;
 	timer.start();
-//	time_t seed = time(NULL);
+	// time_t seed = time(NULL);
 	unsigned long seed = string_to<unsigned long>(args[3]);
 	// srand(seed);
 	init_genrand(seed);
@@ -69,36 +69,36 @@ int main(int argc, char* args[]) {
 	int max_r = max_iterations / 2;
 	double alpha_2 = 0.2;
 
-//	grasp ILS(instance, max_iterations, p, r, alpha_2, timer);
-//	solution result = ILS.execute();
+	// grasp ILS(instance, max_iterations, p, r, alpha_2, timer);
+	// solution result = ILS.execute();
 
-	ils ILS(instance, max_iterations, p, r, timer);
-//	ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
+	// ils ILS(instance, max_iterations, p, r, timer);
+	ils ILS(instance, max_iterations, max_r, alpha_2, p, r, timer);
 	solution result = ILS.execute();
 
 	timer.stop();
-//	printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
+	// printf("TOTAL EXECUTION TIME: %.2lf", timer.getStopTime());
 	printf("%.2lf,", timer.getStopTime());
-//	result.show_data();
+	// result.show_data();
 
-//	printf("\nIT_LOG:\n");
+	// printf("\nIT_LOG:\n");
 	vector< pair< double, unsigned> > it_log = ILS.get_it_log();
 	vector< double > times = ILS.get_times();
 	double min_time = 0.0;
 	for(unsigned i = 0; i < it_log.size(); i++){
-//		printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
+		// printf("#%d:\t%.2lf\t%.2lf\n", it_log[i].second, it_log[i].first, times[i]);
 
 		if(it_log[i].first == result.get_total_cost() && min_time == 0.0)
 			min_time = times[i];
 	}
 
-//	vector< int > path = GRASP.get_path();
-//	printf("\nPATH RELINKING USAGE:\n");
-//	for(unsigned i = 0; i < path.size(); i++)
-//		printf("%d\t", path[i]);
+	// vector< int > path = GRASP.get_path();
+	// printf("\nPATH RELINKING USAGE:\n");
+	// for(unsigned i = 0; i < path.size(); i++)
+	// 	printf("%d\t", path[i]);
 
 	printf("%.2lf,%.2lf\n", min_time, result.get_total_cost());
-//	cout << "," << seed << endl;
+	// cout << "," << seed << endl;
 
 	return 0;
 }
